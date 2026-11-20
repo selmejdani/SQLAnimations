@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title> 4: Joining Tables</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    line-height: 1.6;
+  }
+  header {
+    padding: 40px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #1f6feb22, #16192022);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0; font-size: 2rem; color: #fff; }
+  header p { color: var(--muted); }
+  nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  nav button {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  nav button.active, nav button:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 30px 20px 80px;
+  }
+  section { display: none; animation: fadeIn .3s ease; }
+  section.active { display: block; }
+  @keyframes fadeIn { from {opacity:0; transform: translateY(6px);} to {opacity:1; transform: translateY(0);} }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  h2 { color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { color: var(--accent); }
+  code, pre {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+  }
+  pre { padding: 14px; overflow-x: auto; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 0.85rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+  }
+  th { background: #1c2128; color: #fff; }
+  tr:nth-child(even) { background: #11151a; }
+  td.null-cell { color: var(--muted); font-style: italic; }
+  .badge {
+    display: inline-block;
+    background: #1f6feb33;
+    color: var(--accent);
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    margin-left: 8px;
+  }
+  .playground textarea {
+    width: 100%;
+    min-height: 120px;
+    background: #010409;
+    color: #e6edf3;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: monospace;
+    font-size: 0.95rem;
+    resize: vertical;
+  }
+  .playground button {
+    margin-top: 10px;
+    background: var(--green);
+    color: #04220b;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .playground button:hover { opacity: 0.9; }
+  #result, #challengeResult1, #challengeResult2, #deliverableResult { margin-top: 16px; }
+  .error { color: var(--red); font-weight: 600; }
+  .quiz-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    margin: 6px 0;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .quiz-option.correct { background: #1a3b1f; border-color: var(--green); color: #7ee787; }
+  .quiz-option.wrong { background: #3b1a1a; border-color: var(--red); color: #ffa198; }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .4s ease;
+  }
+  textarea.report {
+    width: 100%;
+    min-height: 90px;
+    background: #010409;
+    color: #e6edf3;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    font-family: inherit;
+  }
+  .qnum { color: var(--accent); font-weight: 700; }
+  footer { text-align: center; color: var(--muted); padding: 20px; font-size: 0.85rem; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .key-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+  .pk { background: #1a3b1f; color: #7ee787; }
+  .fk { background: #2d2547; color: var(--purple); }
+  .join-diagram {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .join-box {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .join-box h4 { margin: 0 0 4px; color: #fff; }
+  .join-arrow { font-size: 1.4rem; color: var(--muted); }
+  .table-tabs { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .table-tabs button {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .table-tabs button.active { color: #fff; border-color: var(--accent); background: #1f6feb22; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔗  4 — Joining Tables</h1>
+  <p>INNER JOIN · LEFT JOIN · Primary/Foreign Keys · Cross-Table Analysis</p>
+</header>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<nav id="tabs">
+  <button data-tab="concepts" class="active">1. Concepts</button>
+  <button data-tab="playground">2. SQL Playground</button>
+  <button data-tab="practice">3. Practice Challenge</button>
+  <button data-tab="quiz">4. Quiz</button>
+  <button data-tab="report">5. Deliverable</button>
+</nav>
+
+<main>
+
+<!-- CONCEPTS -->
+<section id="concepts" class="active">
+  <div class="card">
+    <h2>Why Data Is Split Across Tables</h2>
+    <p>Databases normalize data into multiple tables to avoid duplication and keep data consistent. Instead of repeating a customer's name on every order row, we store customers once in a <code>customers</code> table and reference them by ID from an <code>orders</code> table.</p>
+    <div class="join-diagram">
+      <div class="join-box"><h4>customers</h4>customer_id <span class="key-badge pk">PK</span><br>name, country</div>
+      <div class="join-arrow">→</div>
+      <div class="join-box"><h4>orders</h4>order_id <span class="key-badge pk">PK</span><br>customer_id <span class="key-badge fk">FK</span><br>product_id <span class="key-badge fk">FK</span></div>
+      <div class="join-arrow">→</div>
+      <div class="join-box"><h4>products</h4>product_id <span class="key-badge pk">PK</span><br>name, category, price</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Primary & Foreign Keys</h2>
+    <table>
+      <tr><th>Term</th><th>Definition</th><th>Example</th></tr>
+      <tr><td><strong>Primary Key (PK)</strong></td><td>Uniquely identifies each row in its own table</td><td><code>customers.customer_id</code></td></tr>
+      <tr><td><strong>Foreign Key (FK)</strong></td><td>A column referencing a primary key in another table, creating a relationship</td><td><code>orders.customer_id</code> → <code>customers.customer_id</code></td></tr>
+    </table>
+    <p class="badge">Rule of thumb: FK values must exist in the referenced table's PK (or be NULL)</p>
+  </div>
+
+  <div class="card">
+    <h2>INNER JOIN</h2>
+    <p>Returns only rows where there's a match in <strong>both</strong> tables. If a customer has no orders, they won't appear.</p>
+    <pre>SELECT c.name, o.order_id, o.amount
+FROM customers c
+INNER JOIN orders o ON c.customer_id = o.customer_id;</pre>
+  </div>
+
+  <div class="card">
+    <h2>LEFT JOIN</h2>
+    <p>Returns <strong>all rows from the left table</strong>, plus matching rows from the right table. When there's no match, the right table's columns come back as <code>NULL</code> — this is the key to finding "missing" relationships (e.g., customers with no orders).</p>
+    <pre>SELECT c.name, o.order_id, o.amount
+FROM customers c
+LEFT JOIN orders o ON c.customer_id = o.customer_id;</pre>
+    <p class="badge">If o.order_id IS NULL → that customer has never ordered</p>
+  </div>
+
+  <div class="card">
+    <h2>INNER vs LEFT JOIN</h2>
+    <table>
+      <tr><th>Join Type</th><th>Includes unmatched left rows?</th><th>Typical use</th></tr>
+      <tr><td>INNER JOIN</td><td>No</td><td>Only rows that exist in both tables (e.g., orders with valid customers)</td></tr>
+      <tr><td>LEFT JOIN</td><td>Yes (with NULLs for missing right side)</td><td>Finding gaps — customers with no orders, products never sold</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Putting it all together</h3>
+    <pre>SELECT c.name, o.order_id, p.product_name, p.category
+FROM customers c
+LEFT JOIN orders o ON c.customer_id = o.customer_id
+LEFT JOIN products p ON o.product_id = p.product_id
+WHERE o.order_id IS NULL;
+-- Customers who have never placed an order</pre>
+    <button class="btn-secondary" onclick="goTab('playground')">Try it in the Playground →</button>
+  </div>
+</section>
+
+<!-- PLAYGROUND -->
+<section id="playground">
+  <div class="card">
+    <h2>🧪 SQL Playground</h2>
+    <p>This simulator supports <code>INNER JOIN</code> and <code>LEFT JOIN</code> (two tables at a time), <code>WHERE</code> (including <code>IS NULL</code> / <code>IS NOT NULL</code>), <code>ORDER BY</code>, and <code>LIMIT</code>.</p>
+
+    <div class="table-tabs" id="tableTabs">
+      <button data-t="customers" class="active">customers</button>
+      <button data-t="orders">orders</button>
+      <button data-t="products">products</button>
+    </div>
+    <table id="sampleTable"></table>
+  </div>
+
+  <div class="card playground">
+    <h3>Your Query</h3>
+    <textarea id="sqlInput">SELECT c.name, o.order_id, o.amount, o.order_date
+FROM customers c
+LEFT JOIN orders o ON c.customer_id = o.customer_id
+ORDER BY c.name;</textarea>
+    <br>
+    <button onclick="runQuery()">▶ Run Query</button>
+    <div id="result"></div>
+  </div>
+</section>
+
+<!-- PRACTICE -->
+<section id="practice">
+  <div class="card">
+    <h2>🎯 Practice Challenge 1: Cross-Table Question</h2>
+    <p><strong>Task:</strong> List each order with the customer's name, country, and the product name and category (combine all three tables).</p>
+    <textarea id="challengeInput1">SELECT ...
+FROM orders o
+INNER JOIN customers c ON ...
+INNER JOIN products p ON ...;</textarea>
+    <br>
+    <button onclick="runChallenge(1)">✅ Run My Query</button>
+    <div id="challengeResult1"></div>
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer;color:var(--accent);">Show solution</summary>
+      <pre>SELECT o.order_id, c.name AS customer_name, c.country,
+       p.product_name, p.category, o.amount, o.order_date
+FROM orders o
+INNER JOIN customers c ON o.customer_id = c.customer_id
+INNER JOIN products p ON o.product_id = p.product_id
+ORDER BY o.order_date DESC;</pre>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>🎯 Practice Challenge 2: Products Never Ordered</h2>
+    <p><strong>Task:</strong> Which products have never been ordered? (Hint: LEFT JOIN from products → orders, then check for NULL.)</p>
+    <textarea id="challengeInput2">SELECT ...
+FROM products p
+LEFT JOIN orders o ON ...
+WHERE ...;</textarea>
+    <br>
+    <button onclick="runChallenge(2)">✅ Run My Query</button>
+    <div id="challengeResult2"></div>
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer;color:var(--accent);">Show solution</summary>
+      <pre>SELECT p.product_id, p.product_name, p.category
+FROM products p
+LEFT JOIN orders o ON p.product_id = o.product_id
+WHERE o.order_id IS NULL;</pre>
+    </details>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="card">
+    <h2>📝 Knowledge Check</h2>
+    <div id="quizContainer"></div>
+    <p id="quizScore" style="font-weight:600;"></p>
+  </div>
+</section>
+
+<!-- REPORT / DELIVERABLE -->
+<section id="report">
+  <div class="card">
+    <h2>📄 Deliverable: Customers Inactive for 60+ Days</h2>
+    <p><strong>Business question:</strong> "List all customers who haven't ordered in the last 60 days."</p>
+    <p>This requires a <code>LEFT JOIN</code> from <code>customers</code> to <code>orders</code>, then filtering for either:</p>
+    <ul>
+      <li>No matching order at all (<code>order_id IS NULL</code>), <strong>or</strong></li>
+      <li>Their most recent order is older than 60 days</li>
+    </ul>
+    <p>Today's simulated date is <code>2026-08-18</code>, so "60 days ago" is <code>2026-06-19</code>.</p>
+
+    <textarea id="deliverableInput">-- Step 1: find each customer's most recent order date
+SELECT c.customer_id, c.name, c.country, MAX(o.order_date) AS last_order_date
+FROM customers c
+LEFT JOIN orders o ON c.customer_id = o.customer_id
+GROUP BY c.customer_id, c.name, c.country
+HAVING MAX(o.order_date) < '2026-06-19' OR MAX(o.order_date) IS NULL;</textarea>
+    <br>
+    <button onclick="runDeliverable()">▶ Run Deliverable Query</button>
+    <div id="deliverableResult"></div>
+
+    <h3 style="margin-top:24px;">Written Findings</h3>
+    <textarea class="report" id="reportSummary" placeholder="Summarize: how many customers are inactive, any patterns by country, recommended follow-up actions (e.g., re-engagement email)..."></textarea>
+
+    <br><br>
+    <button class="btn-secondary" onclick="downloadReport()">⬇ Export Report as Markdown</button>
+  </div>
+</section>
+
+</main>
+
+<footer> 4 · Joining Tables · Interactive SQL Course</footer>
+
+<script>
+// ---------- Sample Data ----------
+const customers = [
+  { customer_id: 1, name: "Alice Chen",   country: "US" },
+  { customer_id: 2, name: "Ben Osei",     country: "CA" },
+  { customer_id: 3, name: "Carla Diaz",   country: "MX" },
+  { customer_id: 4, name: "Dev Patel",    country: "US" },
+  { customer_id: 5, name: "Elin Karlsson",country: "SE" },
+  { customer_id: 6, name: "Farid Nasser", country: "US" },
+  { customer_id: 7, name: "Grace Lin",    country: "US" },
+  { customer_id: 8, name: "Hassan Ali",   country: "FR" }
+];
+
+const products = [
+  { product_id: 101, product_name: "Wireless Mouse", category: "Electronics", price: 25.00 },
+  { product_id: 102, product_name: "USB-C Cable",    category: "Electronics", price: 12.00 },
+  { product_id: 103, product_name: "Desk Lamp",      category: "Home",        price: 34.50 },
+  { product_id: 104, product_name: "Notebook Set",   category: "Office",      price: 15.00 },
+  { product_id: 105, product_name: "Standing Mat",   category: "Home",        price: 60.00 }
+];
+
+const orders = [
+  { order_id: 1, customer_id: 1, product_id: 101, amount: 145.50, order_date: "2026-08-10" },
+  { order_id: 2, customer_id: 2, product_id: 102, amount: 89.00,  order_date: "2026-08-05" },
+  { order_id: 3, customer_id: 3, product_id: 101, amount: 210.00, order_date: "2026-07-30" },
+  { order_id: 4, customer_id: 1, product_id: 104, amount: 55.25,  order_date: "2026-05-15" },
+  { order_id: 5, customer_id: 5, product_id: 101, amount: 320.00, order_date: "2026-08-01" },
+  { order_id: 6, customer_id: 6, product_id: 103, amount: 102.10, order_date: "2026-04-25" },
+  { order_id: 7, customer_id: 2, product_id: 104, amount: 47.99,  order_date: "2026-08-14" },
+  { order_id: 8, customer_id: 3, product_id: 101, amount: 175.00, order_date: "2026-08-16" }
+  // Note: customers 4 (Dev Patel), 7 (Grace Lin), 8 (Hassan Ali) have NO orders at all
+  // customer 6 (Farid Nasser) last ordered 2026-04-25 — over 60 days ago
+];
+
+const tables = { customers, orders, products };
+
+function renderTable(data, targetId) {
+  if (!data.length) { document.getElementById(targetId).innerHTML = ""; return; }
+  const cols = Object.keys(data[0]);
+  let html = "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  data.forEach(r => {
+    html += "<tr>" + cols.map(c => `<td>${r[c]}</td>`).join("") + "</tr>";
+  });
+  document.getElementById(targetId).innerHTML = html;
+}
+renderTable(customers, "sampleTable");
+
+document.querySelectorAll("#tableTabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#tableTabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderTable(tables[btn.dataset.t], "sampleTable");
+  });
+});
+
+// ---------- Tabs ----------
+const tabs = document.querySelectorAll("#tabs button");
+const sections = document.querySelectorAll("main section");
+const tabOrder = ["concepts","playground","practice","quiz","report"];
+tabs.forEach(btn => btn.addEventListener("click", () => goTab(btn.dataset.tab)));
+function goTab(name) {
+  tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  sections.forEach(s => s.classList.toggle("active", s.id === name));
+  updateProgress(name);
+}
+function updateProgress(name) {
+  const idx = tabOrder.indexOf(name);
+  document.getElementById("progressFill").style.width = (((idx+1)/tabOrder.length)*100) + "%";
+}
+updateProgress("concepts");
+
+// ---------- Mini Join Query Engine ----------
+// Supports: SELECT cols FROM t1 alias1 [INNER|LEFT] JOIN t2 alias2 ON cond [JOIN t3 alias3 ON cond]
+// [WHERE cond] [GROUP BY cols] [HAVING cond] [ORDER BY cols] [LIMIT n]
+
+function resolveField(row, ref) {
+  // ref like "c.name" or "name" or "MAX(o.order_date)"
+  if (row.hasOwnProperty(ref)) return row[ref];
+  return undefined;
+}
+
+function evalComparison(leftVal, op, rightVal) {
+  switch(op) {
+    case "=": return leftVal == rightVal;
+    case "!=": case "<>": return leftVal != rightVal;
+    case ">": return leftVal > rightVal;
+    case "<": return leftVal < rightVal;
+    case ">=": return leftVal >= rightVal;
+    case "<=": return leftVal <= rightVal;
+    default: return true;
+  }
+}
+
+function evalSimpleCond(row, tok) {
+  tok = tok.trim();
+  let negate = false;
+  if (/^NOT\s+/i.test(tok)) { negate = true; tok = tok.replace(/^NOT\s+/i, ""); }
+
+  // IS NULL / IS NOT NULL
+  let m = tok.match(/^([\w.]+)\s+IS\s+(NOT\s+)?NULL$/i);
+  if (m) {
+    const val = row[m[1]];
+    const isNull = (val === undefined || val === null);
+    const res = m[2] ? !isNull : isNull;
+    return negate ? !res : res;
+  }
+
+  // field op field  OR  field op literal
+  m = tok.match(/^([\w.]+)\s*(!=|<>|>=|<=|=|>|<)\s*(.+)$/);
+  if (!m) return true;
+  let [, field, op, rawVal] = m;
+  rawVal = rawVal.trim().replace(/^'(.*)'$/, "$1");
+  let leftVal = row[field];
+  let rightVal;
+  if (row.hasOwnProperty(rawVal)) {
+    rightVal = row[rawVal]; // comparing two fields (join condition)
+  } else if (!isNaN(parseFloat(rawVal)) && !/^\d{4}-\d{2}-\d{2}$/.test(rawVal)) {
+    rightVal = parseFloat(rawVal);
+  } else {
+    rightVal = rawVal;
+  }
+  const res = evalComparison(leftVal, op, rightVal);
+  return negate ? !res : res;
+}
+
+function evalCondition(row, condStr) {
+  const tokens = condStr.split(/\b(AND|OR)\b/i).map(t => t.trim());
+  let result = null, currentOp = null;
+  for (const tok of tokens) {
+    if (/^(AND|OR)$/i.test(tok)) { currentOp = tok.toUpperCase(); continue; }
+    const val = evalSimpleCond(row, tok);
+    if (result === null) result = val;
+    else if (currentOp === "AND") result = result && val;
+    else if (currentOp === "OR") result = result || val;
+  }
+  return result;
+}
+
+function prefixRow(row, alias, tableName) {
+  const out = {};
+  for (const k in row) {
+    out[`${alias}.${k}`] = row[k];
+    out[k] = row[k]; // also allow unprefixed access
+  }
+  return out;
+}
+
+function mergeRows(a, b) {
+  return Object.assign({}, a, b);
+}
+
+function nullRowFor(alias, tableName) {
+  const sample = tables[tableName][0] || {};
+  const out = {};
+  for (const k in sample) {
+    out[`${alias}.${k}`] = null;
+    out[k] = null;
+  }
+  return out;
+}
+
+function doJoin(leftRows, rightTableName, rightAlias, onCond, joinType) {
+  const rightRows = tables[rightTableName].map(r => prefixRow(r, rightAlias, rightTableName));
+  const result = [];
+  leftRows.forEach(lrow => {
+    let matched = false;
+    rightRows.forEach(rrow => {
+      const merged = mergeRows(lrow, rrow);
+      if (evalCondition(merged, onCond)) {
+        result.push(merged);
+        matched = true;
+      }
+    });
+    if (!matched && joinType === "LEFT") {
+      result.push(mergeRows(lrow, nullRowFor(rightAlias, rightTableName)));
+    }
+  });
+  return result;
+}
+
+function parseSelectList(selectStr) {
+  const parts = [];
+  let depth = 0, cur = "";
+  for (const ch of selectStr) {
+    if (ch === "(") depth++;
+    if (ch === ")") depth--;
+    if (ch === "," && depth === 0) { parts.push(cur.trim()); cur = ""; }
+    else cur += ch;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts.map(p => {
+    const aliasMatch = p.match(/^(.*?)\s+AS\s+(\w+)$/i);
+    if (aliasMatch) return { expr: aliasMatch[1].trim(), alias: aliasMatch[2].trim() };
+    return { expr: p.trim(), alias: p.trim() };
+  });
+}
+
+function computeAgg(fnName, col, rows) {
+  const vals = rows.map(r => parseFloat(r[col])).filter(v => !isNaN(v));
+  switch(fnName.toUpperCase()) {
+    case "COUNT":
+      if (col === "*") return rows.length;
+      return rows.filter(r => r[col] !== undefined && r[col] !== null).length;
+    case "SUM": return vals.reduce((a,b)=>a+b,0);
+    case "AVG": return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+    case "MIN": {
+      const nonNull = rows.map(r=>r[col]).filter(v=>v!==null && v!==undefined);
+      return nonNull.length ? nonNull.sort()[0] : null;
+    }
+    case "MAX": {
+      const nonNull = rows.map(r=>r[col]).filter(v=>v!==null && v!==undefined);
+      return nonNull.length ? nonNull.sort().slice(-1)[0] : null;
+    }
+    default: return null;
+  }
+}
+
+function evalSelectExpr(exprObj, groupRows) {
+  const { expr } = exprObj;
+  const aggMatch = expr.match(/^(COUNT|SUM|AVG|MIN|MAX)\s*\(\s*(\*|[\w.]+)\s*\)$/i);
+  if (aggMatch) {
+    let val = computeAgg(aggMatch[1], aggMatch[2], groupRows);
+    if (typeof val === "number") val = Math.round(val * 100) / 100;
+    return val;
+  }
+  return groupRows[0] ? groupRows[0][expr] : null;
+}
+
+function runSimulatedQuery(sql) {
+  sql = sql.replace(/;\s*$/, "").trim();
+  const selectMatch = sql.match(/^SELECT\s+(.*?)\s+FROM\s+(.*)$/is);
+  if (!selectMatch) throw new Error("Could not parse SELECT/FROM");
+  const selectList = parseSelectList(selectMatch[1]);
+  let rest = selectMatch[2];
+
+  // Parse FROM table alias
+  const fromMatch = rest.match(/^(\w+)\s+(\w+)/);
+  if (!fromMatch) throw new Error("Could not parse FROM clause");
+  const fromTable = fromMatch[1], fromAlias = fromMatch[2];
+  if (!tables[fromTable]) throw new Error(`Unknown table: ${fromTable}`);
+  let rows = tables[fromTable].map(r => prefixRow(r, fromAlias, fromTable));
+
+  // Parse JOIN clauses (supports multiple)
+  const joinRegex = /(INNER|LEFT)\s+JOIN\s+(\w+)\s+(\w+)\s+ON\s+(.*?)(?=(INNER|LEFT)\s+JOIN|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|$)/gis;
+  let jm;
+  while ((jm = joinRegex.exec(rest)) !== null) {
+    const joinType = jm[1].toUpperCase();
+    const joinTable = jm[2];
+    const joinAlias = jm[3];
+    const onCond = jm[4].trim();
+    rows = doJoin(rows, joinTable, joinAlias, onCond, joinType);
+  }
+
+  const whereMatch = rest.match(/WHERE\s+(.*?)(GROUP BY|HAVING|ORDER BY|LIMIT|$)/is);
+  const groupMatch = rest.match(/GROUP BY\s+(.*?)(HAVING|ORDER BY|LIMIT|$)/is);
+  const havingMatch = rest.match(/HAVING\s+(.*?)(ORDER BY|LIMIT|$)/is);
+  const orderMatch = rest.match(/ORDER BY\s+(.*?)(LIMIT|$)/is);
+  const limitMatch = rest.match(/LIMIT\s+(\d+)/i);
+
+  if (whereMatch && whereMatch[1].trim()) {
+    rows = rows.filter(r => evalCondition(r, whereMatch[1].trim()));
+  }
+
+  const hasAgg = selectList.some(s => /^(COUNT|SUM|AVG|MIN|MAX)\s*\(/i.test(s.expr));
+  let resultRows = [];
+
+  if (groupMatch && groupMatch[1].trim()) {
+    const groupCols = groupMatch[1].split(",").map(c => c.trim());
+    const groups = {};
+    rows.forEach(r => {
+      const key = groupCols.map(c => r[c]).join("||");
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+    resultRows = Object.values(groups).map(groupRows => {
+      const outRow = {};
+      selectList.forEach(sel => { outRow[sel.alias] = evalSelectExpr(sel, groupRows); });
+      return outRow;
+    });
+    if (havingMatch && havingMatch[1].trim()) {
+      resultRows = resultRows.filter(r => evalCondition(r, havingMatch[1].trim()));
+    }
+  } else if (hasAgg) {
+    const outRow = {};
+    selectList.forEach(sel => { outRow[sel.alias] = evalSelectExpr(sel, rows); });
+    resultRows = [outRow];
+  } else {
+    resultRows = rows.map(r => {
+      if (selectList.length === 1 && selectList[0].expr === "*") return r;
+      const outRow = {};
+      selectList.forEach(sel => { outRow[sel.alias] = r[sel.expr]; });
+      return outRow;
+    });
+  }
+
+  if (orderMatch && orderMatch[1].trim()) {
+    const clauses = orderMatch[1].split(",").map(c => c.trim());
+    resultRows.sort((a,b) => {
+      for (const c of clauses) {
+        const [col, dir] = c.split(/\s+/);
+        const d = (dir && dir.toUpperCase() === "DESC") ? -1 : 1;
+        const av = a[col] === null || a[col] === undefined ? "" : a[col];
+        const bv = b[col] === null || b[col] === undefined ? "" : b[col];
+        if (av < bv) return -1*d;
+        if (av > bv) return 1*d;
+      }
+      return 0;
+    });
+  }
+  if (limitMatch) resultRows = resultRows.slice(0, parseInt(limitMatch[1]));
+  return resultRows;
+}
+
+function renderRows(rows, targetId) {
+  if (!rows.length) {
+    document.getElementById(targetId).innerHTML = "<p class='error'>No matching rows.</p>";
+    return;
+  }
+  const cols = Object.keys(rows[0]);
+  let html = "<table><tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  rows.forEach(r => {
+    html += "<tr>" + cols.map(c => {
+      const v = r[c];
+      if (v === null || v === undefined) return `<td class="null-cell">NULL</td>`;
+      return `<td>${v}</td>`;
+    }).join("") + "</tr>";
+  });
+  html += "</table><p>" + rows.length + " row(s) returned</p>";
+  document.getElementById(targetId).innerHTML = html;
+}
+
+function runQuery() {
+  const sql = document.getElementById("sqlInput").value;
+  try {
+    const rows = runSimulatedQuery(sql);
+    renderRows(rows, "result");
+  } catch(e) {
+    document.getElementById("result").innerHTML = `<p class="error">Error parsing query: ${e.message}</p>`;
+  }
+}
+
+function runChallenge(num) {
+  const sql = document.getElementById("challengeInput" + num).value;
+  try {
+    const rows = runSimulatedQuery(sql);
+    renderRows(rows, "challengeResult" + num);
+  } catch(e) {
+    document.getElementById("challengeResult" + num).innerHTML = `<p class="error">Error: ${e.message}</p>`;
+  }
+}
+
+function runDeliverable() {
+  const sql = document.getElementById("deliverableInput").value;
+  try {
+    const rows = runSimulatedQuery(sql);
+    renderRows(rows, "deliverableResult");
+    const feedback = document.createElement("p");
+    feedback.style.fontWeight = "600";
+    feedback.style.color = "#3fb950";
+    feedback.textContent = "✅ Expected: Dev Patel, Farid Nasser, Grace Lin, Hassan Ali should appear (no orders, or last order before 2026-06-19).";
+    document.getElementById("deliverableResult").appendChild(feedback);
+  } catch(e) {
+    document.getElementById("deliverableResult").innerHTML = `<p class="error">Error: ${e.message}</p>`;
+  }
+}
+
+// ---------- Quiz ----------
+const quizData = [
+  {
+    q: "What does an INNER JOIN return?",
+    options: [
+      "All rows from the left table regardless of matches",
+      "Only rows where there is a match in both tables",
+      "All rows from both tables, matched or not",
+      "Only unmatched rows"
+    ],
+    answer: 1
+  },
+  {
+    q: "In a LEFT JOIN from customers to orders, what happens to a customer with no orders?",
+    options: [
+      "They are excluded from the result entirely",
+      "The query throws an error",
+      "They appear once with NULLs in the orders columns",
+      "They appear once per product in the catalog"
+    ],
+    answer: 2
+  },
+  {
+    q: "What is a foreign key?",
+    options: [
+      "A column that must be unique within its own table",
+      "A column in one table that references a primary key in another table",
+      "An encrypted column used for security",
+      "The first column in any table"
+    ],
+    answer: 1
+  },
+  {
+    q: "Why is data normalized into multiple related tables instead of one big table?",
+    options: [
+      "To make queries slower for security",
+      "To avoid data duplication and keep information consistent",
+      "Because SQL cannot handle wide tables",
+      "It's required by all databases with no real benefit"
+    ],
+    answer: 1
+  },
+  {
+    q: "To find customers who haven't ordered in 60 days, which approach is correct?",
+    options: [
+      "INNER JOIN customers to orders and filter WHERE amount > 60",
+      "LEFT JOIN customers to orders, then check for NULL order_id or a last order date older than 60 days",
+      "Only query the orders table with LIMIT 60",
+      "Use a RIGHT JOIN from orders to products"
+    ],
+    answer: 1
+  }
+];
+let score = 0, answered = 0;
+function renderQuiz() {
+  const container = document.getElementById("quizContainer");
+  container.innerHTML = "";
+  quizData.forEach((item, qi) => {
+    const div = document.createElement("div");
+    div.style.marginBottom = "22px";
+    div.innerHTML = `<p><span class="qnum">Q${qi+1}.</span> ${item.q}</p>`;
+    item.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.onclick = () => {
+        if (btn.dataset.locked) return;
+        [...div.querySelectorAll(".quiz-option")].forEach(b => b.dataset.locked = "1");
+        if (oi === item.answer) {
+          btn.classList.add("correct");
+          score++;
+        } else {
+          btn.classList.add("wrong");
+          div.querySelectorAll(".quiz-option")[item.answer].classList.add("correct");
+        }
+        answered++;
+        document.getElementById("quizScore").textContent = `Score: ${score}/${quizData.length} (answered ${answered}/${quizData.length})`;
+      };
+      div.appendChild(btn);
+    });
+    container.appendChild(div);
+  });
+}
+renderQuiz();
+
+// ---------- Report Export ----------
+function downloadReport() {
+  let md = "# 4 Deliverable: Customers Inactive for 60+ Days\n\n";
+  md += "## Query Used\n\n```sql\n" + document.getElementById("deliverableInput").value + "\n```\n\n";
+
+  let rowsMd = "## Results\n\n";
+  try {
+    const rows = runSimulatedQuery(document.getElementById("deliverableInput").value);
+    if (rows.length) {
+      const cols = Object.keys(rows[0]);
+      rowsMd += "| " + cols.join(" | ") + " |\n";
+      rowsMd += "|" + cols.map(()=>"---").join("|") + "|\n";
+      rows.forEach(r => {
+        rowsMd += "| " + cols.map(c => (r[c] === null || r[c] === undefined) ? "NULL" : r[c]).join(" | ") + " |\n";
+      });
+    } else {
+      rowsMd += "_(no rows returned)_\n";
+    }
+  } catch(e) {
+    rowsMd += `_(query error: ${e.message})_\n`;
+  }
+  md += rowsMd;
+
+  const summary = document.getElementById("reportSummary").value || "_(no summary provided)_";
+  md += `\n## Written Findings\n\n${summary}\n`;
+
+  const blob = new Blob([md], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "week4-joining-tables-report.md";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>

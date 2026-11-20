@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title> 6: Capstone Project</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --bg: #0d1117; --card: #161b22; --border: #30363d; --accent: #58a6ff;
+    --text: #c9d1d9; --muted: #8b949e; --green: #3fb950; --red: #f85149; --gold: #d29922;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.6; }
+  header { padding: 40px 20px; text-align: center; background: linear-gradient(135deg, #1f6feb22, #16192022); border-bottom: 1px solid var(--border); }
+  header h1 { margin: 0; font-size: 2rem; color: #fff; }
+  header p { color: var(--muted); }
+  nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 16px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+  nav button { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+  nav button.active, nav button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { max-width: 1020px; margin: 0 auto; padding: 30px 20px 80px; }
+  section { display: none; animation: fadeIn .3s ease; }
+  section.active { display: block; }
+  @keyframes fadeIn { from {opacity:0; transform: translateY(6px);} to {opacity:1; transform: translateY(0);} }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; }
+  h2 { color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { color: var(--accent); }
+  code, pre { background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; font-family: 'SFMono-Regular', Consolas, monospace; }
+  pre { padding: 14px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 0.82rem; }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  th { background: #1c2128; color: #fff; }
+  tr:nth-child(even) { background: #11151a; }
+  td.null-cell { color: var(--muted); font-style: italic; }
+  .badge { display: inline-block; background: #1f6feb33; color: var(--accent); border-radius: 5px; padding: 2px 8px; font-size: 0.75rem; margin-left: 8px; }
+  .playground textarea { width: 100%; min-height: 130px; background: #010409; color: #e6edf3; border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 0.92rem; resize: vertical; }
+  .playground button { margin-top: 10px; background: var(--green); color: #04220b; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+  .playground button:hover { opacity: 0.9; }
+  .error { color: var(--red); font-weight: 600; }
+  .quiz-option { display: block; width: 100%; text-align: left; background: #0d1117; border: 1px solid var(--border); color: var(--text); padding: 10px 14px; margin: 6px 0; border-radius: 6px; cursor: pointer; }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+  .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width .4s ease; }
+  textarea.report { width: 100%; min-height: 70px; background: #010409; color: #e6edf3; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: inherit; }
+  footer { text-align: center; color: var(--muted); padding: 20px; font-size: 0.85rem; }
+  .btn-secondary { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+  .table-tabs { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .table-tabs button { background: #0d1117; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+  .table-tabs button.active { color: #fff; border-color: var(--accent); background: #1f6feb22; }
+  .question-card { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 18px; }
+  .question-card h4 { margin: 0 0 6px; color: var(--gold); }
+  .question-status { font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+  .status-done { background: #1a3b1f; color: #7ee787; }
+  .status-todo { background: #3b2b1a; color: #d29922; }
+  .qnav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .qnav button { font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; border: 1px solid var(--border); background: #0d1117; color: var(--muted); cursor: pointer; }
+  .qnav button.done { border-color: var(--green); color: #7ee787; }
+  .dataset-note { background: #1f6feb14; border: 1px solid #1f6feb44; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎓  6 — Capstone Project</h1>
+  <p>Combining Filtering · Aggregation · Joins · Subqueries & CTEs on a Real-World Dataset</p>
+</header>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<nav id="tabs">
+  <button data-tab="dataset" class="active">1. Dataset</button>
+  <button data-tab="playground">2. SQL Playground</button>
+  <button data-tab="questions">3. Business Questions</button>
+  <button data-tab="report">4. Analysis Report</button>
+</nav>
+
+<main>
+
+<!-- DATASET -->
+<section id="dataset" class="active">
+  <div class="card">
+    <h2>📦 The Dataset: Northwind-Style Sales Data</h2>
+    <div class="dataset-note">
+      This capstone uses a simplified version of the classic <strong>Northwind</strong> sales dataset (also similar in spirit to <strong>Chinook</strong>). In the real world you'd download this from Kaggle or the official sample DB and load it into a SQL environment — here it's simulated in-browser so you can query it instantly with no setup.
+    </div>
+    <p>Five related tables model a real sales business:</p>
+    <table>
+      <tr><th>Table</th><th>Represents</th><th>Key columns</th></tr>
+      <tr><td><code>customers</code></td><td>Companies who place orders</td><td>customer_id (PK), name, country, segment</td></tr>
+      <tr><td><code>employees</code></td><td>Sales reps who process orders</td><td>employee_id (PK), name, region</td></tr>
+      <tr><td><code>products</code></td><td>Items for sale</td><td>product_id (PK), product_name, category, unit_price</td></tr>
+      <tr><td><code>orders</code></td><td>One row per order placed</td><td>order_id (PK), customer_id (FK), employee_id (FK), order_date</td></tr>
+      <tr><td><code>order_items</code></td><td>Line items within an order</td><td>order_id (FK), product_id (FK), quantity, unit_price</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="table-tabs" id="tableTabs">
+      <button data-t="customers" class="active">customers</button>
+      <button data-t="employees">employees</button>
+      <button data-t="products">products</button>
+      <button data-t="orders">orders</button>
+      <button data-t="order_items">order_items</button>
+    </div>
+    <table id="sampleTable"></table>
+  </div>
+
+  <div class="card">
+    <h3>What You'll Practice</h3>
+    <p>Everything from 2–5 comes together here: <code>WHERE</code>/<code>ORDER BY</code>/<code>LIMIT</code> filtering, <code>GROUP BY</code>/<code>HAVING</code> aggregation, multi-table <code>JOIN</code>s, and <code>WITH</code> CTEs / subqueries — used together to answer realistic stakeholder questions.</p>
+    <button class="btn-secondary" onclick="goTab('playground')">Go to Playground →</button>
+  </div>
+</section>
+
+<!-- PLAYGROUND -->
+<section id="playground">
+  <div class="card">
+    <h2>🧪 SQL Playground</h2>
+    <p>Query the full 5-table dataset. Supports <code>WITH</code> CTEs (chainable), <code>JOIN</code>/<code>LEFT JOIN</code>/<code>CROSS JOIN</code> (multiple), scalar/list subqueries, <code>WHERE</code>, <code>GROUP BY</code>/<code>HAVING</code>, <code>ORDER BY</code>, <code>LIMIT</code>.</p>
+    <textarea id="sqlInput">SELECT p.category,
+       SUM(oi.quantity * oi.unit_price) AS revenue
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+GROUP BY p.category
+ORDER BY revenue DESC;</textarea>
+    <br>
+    <button onclick="runQuery()">▶ Run Query</button>
+    <div id="result" style="margin-top:16px;"></div>
+  </div>
+</section>
+
+<!-- BUSINESS QUESTIONS -->
+<section id="questions">
+  <div class="card">
+    <h2>📋 10 Realistic Business Questions</h2>
+    <p>Answer each question with a query in its box, run it, then jot your insight. Mark it done when you're satisfied — your progress is tracked below.</p>
+    <div class="qnav" id="qnav"></div>
+  </div>
+  <div id="questionsContainer"></div>
+</section>
+
+<!-- REPORT -->
+<section id="report">
+  <div class="card">
+    <h2>📄 Deliverable: Data Analysis Report</h2>
+    <p>Imagine you're presenting these findings to a business stakeholder. Write an executive summary, then export the full report — including every query, result set, and insight from the Business Questions tab — as a single Markdown file.</p>
+
+    <h3>Executive Summary</h3>
+    <textarea class="report" id="execSummary" placeholder="2-3 sentences: what's the headline finding? What should the business do next?"></textarea>
+
+    <h3 style="margin-top:20px;">Key Recommendations</h3>
+    <textarea class="report" id="recommendations" placeholder="List 3-5 concrete, actionable recommendations based on your findings..."></textarea>
+
+    <br><br>
+    <button class="btn-secondary" onclick="downloadReport()">⬇ Export Full Report as Markdown</button>
+    <p id="reportStatus" style="margin-top:10px;color:var(--muted);font-size:0.85rem;"></p>
+  </div>
+</section>
+
+</main>
+
+<footer>Week 6 · Capstone Project · Interactive SQL Course</footer>
+
+<script>
+/* ============================ SAMPLE DATA ============================ */
+const customers = [
+  { customer_id: 1, name: "Alpine Traders",   country: "US", segment: "Enterprise" },
+  { customer_id: 2, name: "Blue Harbor Co.",  country: "CA", segment: "SMB" },
+  { customer_id: 3, name: "Cactus Retail",    country: "MX", segment: "SMB" },
+  { customer_id: 4, name: "Dune Logistics",   country: "US", segment: "Enterprise" },
+  { customer_id: 5, name: "Elm & Co",         country: "SE", segment: "SMB" },
+  { customer_id: 6, name: "Falcon Freight",   country: "US", segment: "Mid-Market" },
+  { customer_id: 7, name: "Green Valley Mart",country: "US", segment: "SMB" },
+  { customer_id: 8, name: "Harborview Foods", country: "FR", segment: "Mid-Market" },
+  { customer_id: 9, name: "Ivory Supplies",   country: "CA", segment: "SMB" },
+  { customer_id:10, name: "Juniper Group",    country: "US", segment: "Enterprise" }
+];
+
+const employees = [
+  { employee_id: 1, name: "Sam Rivera",   region: "West" },
+  { employee_id: 2, name: "Priya Nair",   region: "East" },
+  { employee_id: 3, name: "Tom Becker",   region: "West" },
+  { employee_id: 4, name: "Yuki Sato",    region: "East" }
+];
+
+const products = [
+  { product_id: 101, product_name: "Wireless Mouse",   category: "Electronics", unit_price: 25.00 },
+  { product_id: 102, product_name: "USB-C Cable",      category: "Electronics", unit_price: 12.00 },
+  { product_id: 103, product_name: "Desk Lamp",        category: "Home",        unit_price: 34.50 },
+  { product_id: 104, product_name: "Notebook Set",     category: "Office",      unit_price: 15.00 },
+  { product_id: 105, product_name: "Standing Mat",     category: "Home",        unit_price: 60.00 },
+  { product_id: 106, product_name: "Mechanical Keyboard", category: "Electronics", unit_price: 89.00 },
+  { product_id: 107, product_name: "Stapler",          category: "Office",      unit_price: 8.00 },
+  { product_id: 108, product_name: "Monitor Stand",     category: "Home",       unit_price: 45.00 }
+];
+
+const orders = [
+  { order_id: 1, customer_id: 1, employee_id: 1, order_date: "2026-06-02" },
+  { order_id: 2, customer_id: 2, employee_id: 2, order_date: "2026-06-10" },
+  { order_id: 3, customer_id: 3, employee_id: 1, order_date: "2026-06-18" },
+  { order_id: 4, customer_id: 1, employee_id: 3, order_date: "2026-07-05" },
+  { order_id: 5, customer_id: 4, employee_id: 2, order_date: "2026-07-08" },
+  { order_id: 6, customer_id: 5, employee_id: 4, order_date: "2026-07-15" },
+  { order_id: 7, customer_id: 6, employee_id: 1, order_date: "2026-07-20" },
+  { order_id: 8, customer_id: 2, employee_id: 2, order_date: "2026-07-28" },
+  { order_id: 9, customer_id: 1, employee_id: 3, order_date: "2026-08-01" },
+  { order_id:10, customer_id: 7, employee_id: 1, order_date: "2026-08-04" },
+  { order_id:11, customer_id: 4, employee_id: 2, order_date: "2026-08-06" },
+  { order_id:12, customer_id: 8, employee_id: 4, order_date: "2026-08-09" },
+  { order_id:13, customer_id: 3, employee_id: 1, order_date: "2026-08-11" },
+  { order_id:14, customer_id: 10,employee_id: 3, order_date: "2026-08-13" },
+  { order_id:15, customer_id: 6, employee_id: 1, order_date: "2026-08-15" },
+  { order_id:16, customer_id: 5, employee_id: 4, order_date: "2026-08-17" }
+  // customer 9 (Ivory Supplies) has NO orders
+];
+
+const order_items = [
+  { order_id: 1, product_id: 101, quantity: 3, unit_price: 25.00 },
+  { order_id: 1, product_id: 104, quantity: 5, unit_price: 15.00 },
+  { order_id: 2, product_id: 102, quantity: 10, unit_price: 12.00 },
+  { order_id: 3, product_id: 101, quantity: 2, unit_price: 25.00 },
+  { order_id: 3, product_id: 106, quantity: 1, unit_price: 89.00 },
+  { order_id: 4, product_id: 105, quantity: 2, unit_price: 60.00 },
+  { order_id: 5, product_id: 106, quantity: 4, unit_price: 89.00 },
+  { order_id: 6, product_id: 103, quantity: 3, unit_price: 34.50 },
+  { order_id: 7, product_id: 107, quantity: 20, unit_price: 8.00 },
+  { order_id: 8, product_id: 102, quantity: 15, unit_price: 12.00 },
+  { order_id: 9, product_id: 108, quantity: 2, unit_price: 45.00 },
+  { order_id: 9, product_id: 101, quantity: 1, unit_price: 25.00 },
+  { order_id:10, product_id: 104, quantity: 8, unit_price: 15.00 },
+  { order_id:11, product_id: 106, quantity: 3, unit_price: 89.00 },
+  { order_id:12, product_id: 103, quantity: 4, unit_price: 34.50 },
+  { order_id:13, product_id: 108, quantity: 1, unit_price: 45.00 },
+  { order_id:14, product_id: 106, quantity: 5, unit_price: 89.00 },
+  { order_id:15, product_id: 107, quantity: 12, unit_price: 8.00 },
+  { order_id:16, product_id: 105, quantity: 2, unit_price: 60.00 }
+];
+
+const baseTables = { customers, employees, products, orders, order_items };
+
+function renderTable(data, targetId) {
+  if (!data.length) { document.getElementById(targetId).innerHTML = ""; return; }
+  const cols = Object.keys(data[0]);
+  let html = "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  data.forEach(r => { html += "<tr>" + cols.map(c => `<td>${r[c]}</td>`).join("") + "</tr>"; });
+  document.getElementById(targetId).innerHTML = html;
+}
+renderTable(customers, "sampleTable");
+document.querySelectorAll("#tableTabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#tableTabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderTable(baseTables[btn.dataset.t], "sampleTable");
+  });
+});
+
+/* ============================ TABS ============================ */
+const tabs = document.querySelectorAll("#tabs button");
+const sections = document.querySelectorAll("main section");
+const tabOrder = ["dataset","playground","questions","report"];
+tabs.forEach(btn => btn.addEventListener("click", () => goTab(btn.dataset.tab)));
+function goTab(name) {
+  tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  sections.forEach(s => s.classList.toggle("active", s.id === name));
+  updateProgress(name);
+}
+function updateProgress(name) {
+  const idx = tabOrder.indexOf(name);
+  document.getElementById("progressFill").style.width = (((idx+1)/tabOrder.length)*100) + "%";
+}
+updateProgress("dataset");
+
+/* ============================ MINI SQL ENGINE ============================
+   Supports WITH CTEs (chained), scalar/list subqueries, multiple JOIN/LEFT
+   JOIN/CROSS JOIN, WHERE (AND/OR/NOT, IS NULL, IN), GROUP BY/HAVING,
+   ORDER BY, LIMIT. Teaching simulator, not a full parser.
+=========================================================================== */
+let registry = {};
+function resetRegistry() { registry = Object.assign({}, baseTables); }
+function prefixRow(row, alias) {
+  const out = Object.assign({}, row);
+  for (const k in row) out[`${alias}.${k}`] = row[k];
+  return out;
+}
+function evalComparison(a, op, b) {
+  switch(op) {
+    case "=": return a == b;
+    case "!=": case "<>": return a != b;
+    case ">": return a > b;
+    case "<": return a < b;
+    case ">=": return a >= b;
+    case "<=": return a <= b;
+    default: return true;
+  }
+}
+function computeAgg(fnName, colExpr, rows) {
+  // colExpr may be "quantity * unit_price" or a plain column
+  const vals = rows.map(r => evalArithExpr(r, colExpr)).filter(v => typeof v === "number" && !isNaN(v));
+  switch(fnName.toUpperCase()) {
+    case "COUNT": return colExpr === "*" ? rows.length : rows.filter(r => r[colExpr] !== undefined && r[colExpr] !== null).length;
+    case "SUM": return vals.reduce((a,b)=>a+b,0);
+    case "AVG": return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+    case "MIN": return vals.length ? Math.min(...vals) : null;
+    case "MAX": return vals.length ? Math.max(...vals) : null;
+    default: return null;
+  }
+}
+function evalArithExpr(row, expr) {
+  expr = expr.trim();
+  if (row.hasOwnProperty(expr)) return row[expr];
+  // simple a * b or a + b support
+  const m = expr.match(/^([\w.]+)\s*([*+\-\/])\s*([\w.]+)$/);
+  if (m) {
+    const a = row.hasOwnProperty(m[1]) ? parseFloat(row[m[1]]) : parseFloat(m[1]);
+    const b = row.hasOwnProperty(m[3]) ? parseFloat(row[m[3]]) : parseFloat(m[3]);
+    switch(m[2]) {
+      case "*": return a*b;
+      case "+": return a+b;
+      case "-": return a-b;
+      case "/": return a/b;
+    }
+  }
+  const num = parseFloat(expr);
+  return isNaN(num) ? expr : num;
+}
+function extractBalanced(str, startIdx) {
+  let depth = 0;
+  for (let i = startIdx; i < str.length; i++) {
+    if (str[i] === "(") depth++;
+    if (str[i] === ")") { depth--; if (depth === 0) return str.substring(startIdx+1, i); }
+  }
+  throw new Error("Unbalanced parentheses");
+}
+function parseSelectList(selectStr) {
+  const parts = []; let depth = 0, cur = "";
+  for (const ch of selectStr) {
+    if (ch === "(") depth++;
+    if (ch === ")") depth--;
+    if (ch === "," && depth === 0) { parts.push(cur.trim()); cur = ""; }
+    else cur += ch;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts.map(p => {
+    const aliasMatch = p.match(/^(.*?)\s+AS\s+(\w+)$/i);
+    if (aliasMatch) return { expr: aliasMatch[1].trim(), alias: aliasMatch[2].trim() };
+    return { expr: p.trim(), alias: p.trim().replace(/[^\w.]/g, "_") };
+  });
+}
+function evalSelectExpr(exprObj, groupRows) {
+  const { expr } = exprObj;
+  const aggMatch = expr.match(/^(COUNT|SUM|AVG|MIN|MAX)\s*\(\s*(.*?)\s*\)$/i);
+  if (aggMatch) {
+    let val = computeAgg(aggMatch[1], aggMatch[2], groupRows);
+    if (typeof val === "number") val = Math.round(val * 100) / 100;
+    return val;
+  }
+  const val = evalArithExpr(groupRows[0] || {}, expr);
+  return typeof val === "number" ? Math.round(val*100)/100 : val;
+}
+function runScalarSubquery(sqlInner) {
+  const rows = runSelectStatement(sqlInner.trim());
+  if (!rows.length) return null;
+  return rows[0][Object.keys(rows[0])[0]];
+}
+function runListSubquery(sqlInner) {
+  const rows = runSelectStatement(sqlInner.trim());
+  if (!rows.length) return [];
+  const key = Object.keys(rows[0])[0];
+  return rows.map(r => r[key]);
+}
+function evalSimpleCond(row, tok) {
+  tok = tok.trim();
+  let negate = false;
+  if (/^NOT\s+/i.test(tok)) { negate = true; tok = tok.replace(/^NOT\s+/i, ""); }
+  let m = tok.match(/^([\w.]+)\s+IS\s+(NOT\s+)?NULL$/i);
+  if (m) {
+    const val = row[m[1]];
+    const isNull = (val === undefined || val === null);
+    const res = m[2] ? !isNull : isNull;
+    return negate ? !res : res;
+  }
+  m = tok.match(/^([\w.]+)\s+IN\s*\((.*)\)$/is);
+  if (m) {
+    const field = m[1], inner = m[2].trim();
+    let list = /^SELECT/i.test(inner) ? runListSubquery(inner) : inner.split(",").map(v => v.trim().replace(/^'(.*)'$/, "$1"));
+    const res = list.map(String).includes(String(row[field]));
+    return negate ? !res : res;
+  }
+  m = tok.match(/^([\w.]+)\s*(!=|<>|>=|<=|=|>|<)\s*\((.*)\)$/is);
+  if (m) {
+    const field = m[1], op = m[2], inner = m[3].trim();
+    const rightVal = /^SELECT/i.test(inner) ? runScalarSubquery(inner) : inner;
+    const res = evalComparison(row[field], op, rightVal);
+    return negate ? !res : res;
+  }
+  m = tok.match(/^([\w.]+)\s*(!=|<>|>=|<=|=|>|<)\s*(.+)$/);
+  if (m) {
+    let [, field, op, rawVal] = m;
+    rawVal = rawVal.trim().replace(/^'(.*)'$/, "$1");
+    let rightVal;
+    if (row.hasOwnProperty(rawVal)) rightVal = row[rawVal];
+    else if (!isNaN(parseFloat(rawVal)) && !/^\d{4}-\d{2}-\d{2}$/.test(rawVal)) rightVal = parseFloat(rawVal);
+    else rightVal = rawVal;
+    const res = evalComparison(row[field], op, rightVal);
+    return negate ? !res : res;
+  }
+  return true;
+}
+function splitTopLevel(str) {
+  const parts = []; let depth = 0, cur = "", i = 0;
+  while (i < str.length) {
+    const ch = str[i];
+    if (ch === "(") depth++;
+    if (ch === ")") depth--;
+    const rest = str.slice(i);
+    const kwMatch = depth === 0 && rest.match(/^\s*(AND|OR)\s+/i);
+    if (kwMatch) { parts.push(cur.trim()); parts.push(kwMatch[1].toUpperCase()); i += kwMatch[0].length; cur = ""; continue; }
+    cur += ch; i++;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts;
+}
+function evalCondition(row, condStr) {
+  const tokens = splitTopLevel(condStr);
+  let result = null, currentOp = null;
+  for (const tok of tokens) {
+    if (/^(AND|OR)$/i.test(tok)) { currentOp = tok; continue; }
+    let t = tok.trim();
+    if (t.startsWith("(") && t.endsWith(")")) {
+      const inner = extractBalanced(t, 0);
+      if (inner.length === t.length - 2) t = inner;
+    }
+    const val = evalSimpleCond(row, t);
+    if (result === null) result = val;
+    else if (currentOp === "AND") result = result && val;
+    else if (currentOp === "OR") result = result || val;
+  }
+  return result;
+}
+function doJoin(leftRows, rightTableName, rightAlias, onCond, joinType) {
+  const rightRows = registry[rightTableName].map(r => prefixRow(r, rightAlias));
+  const result = [];
+  leftRows.forEach(lrow => {
+    let matched = false;
+    rightRows.forEach(rrow => {
+      const merged = Object.assign({}, lrow, rrow);
+      if (evalCondition(merged, onCond)) { result.push(merged); matched = true; }
+    });
+    if (!matched && joinType === "LEFT") result.push(Object.assign({}, lrow));
+  });
+  return result;
+}
+function runSelectStatement(sql) {
+  sql = sql.trim().replace(/;\s*$/, "");
+  const selectMatch = sql.match(/^SELECT\s+(.*?)\s+FROM\s+(.*)$/is);
+  if (!selectMatch) throw new Error("Could not parse SELECT/FROM");
+  const selectList = parseSelectList(selectMatch[1]);
+  let rest = selectMatch[2];
+  const fromMatch = rest.match(/^(\w+)(?:\s+(\w+))?/);
+  if (!fromMatch) throw new Error("Could not parse FROM clause");
+  const fromTable = fromMatch[1], fromAlias = fromMatch[2] || fromTable;
+  if (!registry[fromTable]) throw new Error(`Unknown table/CTE: ${fromTable}`);
+  let rows = registry[fromTable].map(r => prefixRow(r, fromAlias));
+
+  const joinRegex = /(INNER\s+JOIN|LEFT\s+JOIN|JOIN|CROSS\s+JOIN)\s+(\w+)\s+(\w+)(?:\s+ON\s+(.*?))?(?=(INNER\s+JOIN|LEFT\s+JOIN|JOIN|CROSS\s+JOIN|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|$))/gis;
+  let jm;
+  while ((jm = joinRegex.exec(rest)) !== null) {
+    let joinType = jm[1].toUpperCase().includes("LEFT") ? "LEFT" : (jm[1].toUpperCase().includes("CROSS") ? "CROSS" : "INNER");
+    const joinTable = jm[2], joinAlias = jm[3], onCond = (jm[4] || "").trim();
+    if (!registry[joinTable]) throw new Error(`Unknown table/CTE: ${joinTable}`);
+    if (joinType === "CROSS") {
+      const rightRows = registry[joinTable].map(r => prefixRow(r, joinAlias));
+      const combined = [];
+      rows.forEach(l => rightRows.forEach(r => combined.push(Object.assign({}, l, r))));
+      rows = combined;
+    } else {
+      rows = doJoin(rows, joinTable, joinAlias, onCond, joinType);
+    }
+  }
+
+  const whereMatch = rest.match(/WHERE\s+(.*?)(GROUP BY|HAVING|ORDER BY|LIMIT|$)/is);
+  const groupMatch = rest.match(/GROUP BY\s+(.*?)(HAVING|ORDER BY|LIMIT|$)/is);
+  const havingMatch = rest.match(/HAVING\s+(.*?)(ORDER BY|LIMIT|$)/is);
+  const orderMatch = rest.match(/ORDER BY\s+(.*?)(LIMIT|$)/is);
+  const limitMatch = rest.match(/LIMIT\s+(\d+)/i);
+
+  if (whereMatch && whereMatch[1].trim()) rows = rows.filter(r => evalCondition(r, whereMatch[1].trim()));
+
+  const hasAgg = selectList.some(s => /^(COUNT|SUM|AVG|MIN|MAX)\s*\(/i.test(s.expr));
+  let resultRows = [];
+
+  if (groupMatch && groupMatch[1].trim()) {
+    const groupCols = groupMatch[1].split(",").map(c => c.trim());
+    const groups = {};
+    rows.forEach(r => {
+      const key = groupCols.map(c => r[c]).join("||");
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+    resultRows = Object.values(groups).map(groupRows => {
+      const outRow = {};
+      selectList.forEach(sel => { outRow[sel.alias] = evalSelectExpr(sel, groupRows); });
+      return outRow;
+    });
+    if (havingMatch && havingMatch[1].trim()) resultRows = resultRows.filter(r => evalCondition(r, havingMatch[1].trim()));
+  } else if (hasAgg) {
+    const outRow = {};
+    selectList.forEach(sel => { outRow[sel.alias] = evalSelectExpr(sel, rows); });
+    resultRows = [outRow];
+  } else {
+    resultRows = rows.map(r => {
+      if (selectList.length === 1 && selectList[0].expr === "*") return r;
+      const outRow = {};
+      selectList.forEach(sel => { outRow[sel.alias] = evalArithExpr(r, sel.expr); });
+      return outRow;
+    });
+  }
+
+  if (orderMatch && orderMatch[1].trim()) {
+    const clauses = orderMatch[1].split(",").map(c => c.trim());
+    resultRows.sort((a,b) => {
+      for (const c of clauses) {
+        const [col, dir] = c.split(/\s+/);
+        const d = (dir && dir.toUpperCase() === "DESC") ? -1 : 1;
+        const av = a[col] === null || a[col] === undefined ? "" : a[col];
+        const bv = b[col] === null || b[col] === undefined ? "" : b[col];
+        if (av < bv) return -1*d;
+        if (av > bv) return 1*d;
+      }
+      return 0;
+    });
+  }
+  if (limitMatch) resultRows = resultRows.slice(0, parseInt(limitMatch[1]));
+  return resultRows;
+}
+function runSimulatedQuery(sql) {
+  resetRegistry();
+  sql = sql.trim();
+  if (/^WITH\s/i.test(sql)) {
+    let rest = sql.replace(/^WITH\s+/i, "");
+    while (true) {
+      const nameMatch = rest.match(/^(\w+)\s+AS\s*\(/i);
+      if (!nameMatch) break;
+      const cteName = nameMatch[1];
+      const parenStart = rest.indexOf("(", nameMatch.index);
+      const inner = extractBalanced(rest, parenStart);
+      registry[cteName] = runSelectStatement(inner);
+      rest = rest.slice(parenStart + inner.length + 2).trim();
+      if (rest.startsWith(",")) { rest = rest.slice(1).trim(); continue; }
+      break;
+    }
+    return runSelectStatement(rest);
+  }
+  return runSelectStatement(sql);
+}
+function renderRows(rows, targetId) {
+  if (!rows.length) { document.getElementById(targetId).innerHTML = "<p class='error'>No matching rows.</p>"; return; }
+  const cols = Object.keys(rows[0]);
+  let html = "<table><tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  rows.forEach(r => {
+    html += "<tr>" + cols.map(c => {
+      const v = r[c];
+      if (v === null || v === undefined) return `<td class="null-cell">NULL</td>`;
+      return `<td>${v}</td>`;
+    }).join("") + "</tr>";
+  });
+  html += "</table><p>" + rows.length + " row(s) returned</p>";
+  document.getElementById(targetId).innerHTML = html;
+}
+function runQuery() {
+  const sql = document.getElementById("sqlInput").value;
+  try { renderRows(runSimulatedQuery(sql), "result"); }
+  catch(e) { document.getElementById("result").innerHTML = `<p class="error">Error: ${e.message}</p>`; }
+}
+
+/* ============================ BUSINESS QUESTIONS ============================ */
+const businessQuestions = [
+  {
+    title: "1. What is our total revenue, and how has it trended by month?",
+    hint: "Use order_items joined to orders; GROUP BY month extracted from order_date.",
+    sql: `SELECT substr(o.order_date,1,7) AS month, SUM(oi.quantity * oi.unit_price) AS revenue
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+GROUP BY substr(o.order_date,1,7)
+ORDER BY month;`
+  },
+  {
+    title: "2. What's our average order value per customer?",
+    hint: "Aggregate order_items per order, then average per customer.",
+    sql: `WITH order_totals AS (
+  SELECT o.order_id, o.customer_id, SUM(oi.quantity * oi.unit_price) AS order_total
+  FROM orders o
+  JOIN order_items oi ON o.order_id = oi.order_id
+  GROUP BY o.order_id, o.customer_id
+)
+SELECT c.name, AVG(ot.order_total) AS avg_order_value
+FROM order_totals ot
+JOIN customers c ON c.customer_id = ot.customer_id
+GROUP BY c.name
+ORDER BY avg_order_value DESC;`
+  },
+  {
+    title: "3. Which products sell best (by revenue) each month?",
+    hint: "Join order_items to products and orders; GROUP BY month + product.",
+    sql: `SELECT substr(o.order_date,1,7) AS month, p.product_name,
+       SUM(oi.quantity * oi.unit_price) AS revenue
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+GROUP BY substr(o.order_date,1,7), p.product_name
+ORDER BY month, revenue DESC;`
+  },
+  {
+    title: "4. What is revenue by product category?",
+    hint: "GROUP BY category, SUM(quantity * unit_price).",
+    sql: `SELECT p.category, SUM(oi.quantity * oi.unit_price) AS revenue
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+GROUP BY p.category
+ORDER BY revenue DESC;`
+  },
+  {
+    title: "5. What is revenue by customer country/region?",
+    hint: "Join orders → customers, then aggregate.",
+    sql: `SELECT c.country, SUM(oi.quantity * oi.unit_price) AS revenue
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id
+GROUP BY c.country
+ORDER BY revenue DESC;`
+  },
+  {
+    title: "6. Which customers have NOT placed an order in the last 30 days (as of 2026-08-18)?",
+    hint: "LEFT JOIN customers to orders, check MAX(order_date) or NULL.",
+    sql: `SELECT c.name, MAX(o.order_date) AS last_order_date
+FROM customers c
+LEFT JOIN orders o ON c.customer_id = o.customer_id
+GROUP BY c.name
+HAVING MAX(o.order_date) < '2026-07-19' OR MAX(o.order_date) IS NULL;`
+  },
+  {
+    title: "7. Who are our top 3 customers by total revenue?",
+    hint: "Aggregate revenue per customer, ORDER BY DESC, LIMIT 3.",
+    sql: `SELECT c.name, SUM(oi.quantity * oi.unit_price) AS total_revenue
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id
+GROUP BY c.name
+ORDER BY total_revenue DESC
+LIMIT 3;`
+  },
+  {
+    title: "8. Which employees generated the most revenue?",
+    hint: "Join orders → employees → order_items, aggregate by employee.",
+    sql: `SELECT e.name, SUM(oi.quantity * oi.unit_price) AS revenue_generated
+FROM orders o
+JOIN employees e ON o.employee_id = e.employee_id
+JOIN order_items oi ON o.order_id = oi.order_id
+GROUP BY e.name
+ORDER BY revenue_generated DESC;`
+  },
+  {
+    title: "9. Which products have never been ordered?",
+    hint: "LEFT JOIN products to order_items, filter WHERE order_id IS NULL.",
+    sql: `SELECT p.product_name, p.category
+FROM products p
+LEFT JOIN order_items oi ON p.product_id = oi.product_id
+WHERE oi.order_id IS NULL;`
+  },
+  {
+    title: "10. Which customers spend above the average customer total (high-value customers)?",
+    hint: "Use a CTE for per-customer totals, then compare against AVG() via subquery.",
+    sql: `WITH customer_totals AS (
+  SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent
+  FROM customers c
+  JOIN orders o ON c.customer_id = o.customer_id
+  JOIN order_items oi ON o.order_id = oi.order_id
+  GROUP BY c.customer_id, c.name
+)
+SELECT name, total_spent
+FROM customer_totals
+WHERE total_spent > (SELECT AVG(total_spent) FROM customer_totals)
+ORDER BY total_spent DESC;`
+  }
+];
+
+function renderQuestions() {
+  const container = document.getElementById("questionsContainer");
+  const qnav = document.getElementById("qnav");
+  container.innerHTML = "";
+  qnav.innerHTML = "";
+  businessQuestions.forEach((q, i) => {
+    const card = document.createElement("div");
+    card.className = "card question-card";
+    card.id = `qcard-${i}`;
+    card.innerHTML = `
+      <h4>${q.title} <span class="question-status status-todo" id="qstatus-${i}">not started</span></h4>
+      <p style="color:var(--muted);font-size:0.85rem;">💡 ${q.hint}</p>
+      <textarea id="qsql-${i}">${q.sql}</textarea>
+      <br>
+      <button onclick="runQuestion(${i})">▶ Run Query</button>
+      <div id="qresult-${i}" style="margin-top:12px;"></div>
+      <textarea class="report" id="qinsight-${i}" placeholder="Write your business insight for this question here..." style="margin-top:10px;"></textarea>
+    `;
+    container.appendChild(card);
+
+    const navBtn = document.createElement("button");
+    navBtn.textContent = `Q${i+1}`;
+    navBtn.id = `qnavbtn-${i}`;
+    navBtn.onclick = () => { goTab("questions"); card.scrollIntoView({behavior:"smooth", block:"start"}); };
+    qnav.appendChild(navBtn);
+  });
+}
+renderQuestions();
+
+function runQuestion(i) {
+  const sql = document.getElementById(`qsql-${i}`).value;
+  try {
+    const rows = runSimulatedQuery(sql);
+    renderRows(rows, `qresult-${i}`);
+    document.getElementById(`qstatus-${i}`).textContent = "answered";
+    document.getElementById(`qstatus-${i}`).className = "question-status status-done";
+    document.getElementById(`qnavbtn-${i}`).classList.add("done");
+  } catch(e) {
+    document.getElementById(`qresult-${i}`).innerHTML = `<p class="error">Error: ${e.message}</p>`;
+  }
+}
+
+/* ============================ REPORT EXPORT ============================ */
+function downloadReport() {
+  let md = "# Capstone Data Analysis Report\n\n";
+  md += "**Dataset:** Northwind-style sales data (customers, employees, products, orders, order_items)\n\n";
+  md += "## Executive Summary\n\n" + (document.getElementById("execSummary").value || "_(no summary provided)_") + "\n\n";
+  md += "## Key Recommendations\n\n" + (document.getElementById("recommendations").value || "_(no recommendations provided)_") + "\n\n";
+  md += "---\n\n## Business Questions & Findings\n\n";
+
+  businessQuestions.forEach((q, i) => {
+    md += `### ${q.title}\n\n`;
+    const sql = document.getElementById(`qsql-${i}`).value;
+    md += "```sql\n" + sql + "\n```\n\n";
+    try {
+      const rows = runSimulatedQuery(sql);
+      if (rows.length) {
+        const cols = Object.keys(rows[0]);
+        md += "| " + cols.join(" | ") + " |\n";
+        md += "|" + cols.map(()=>"---").join("|") + "|\n";
+        rows.slice(0, 15).forEach(r => {
+          md += "| " + cols.map(c => (r[c] === null || r[c] === undefined) ? "NULL" : r[c]).join(" | ") + " |\n";
+        });
+        if (rows.length > 15) md += `\n_(showing first 15 of ${rows.length} rows)_\n`;
+      } else {
+        md += "_(no rows returned)_\n";
+      }
+    } catch(e) {
+      md += `_(query error: ${e.message})_\n`;
+    }
+    const insight = document.getElementById(`qinsight-${i}`).value || "_(no insight recorded)_";
+    md += `\n**Insight:** ${insight}\n\n---\n\n`;
+  });
+
+  const blob = new Blob([md], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "capstone-data-analysis-report.md";
+  a.click();
+  URL.revokeObjectURL(url);
+  document.getElementById("reportStatus").textContent = "✅ Report exported — capstone-data-analysis-report.md";
+}
+</script>
+
+</body>
+</html>

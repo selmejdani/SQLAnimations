@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title> 5: Subqueries & CTEs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    line-height: 1.6;
+  }
+  header {
+    padding: 40px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #1f6feb22, #16192022);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0; font-size: 2rem; color: #fff; }
+  header p { color: var(--muted); }
+  nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  nav button {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  nav button.active, nav button:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 30px 20px 80px;
+  }
+  section { display: none; animation: fadeIn .3s ease; }
+  section.active { display: block; }
+  @keyframes fadeIn { from {opacity:0; transform: translateY(6px);} to {opacity:1; transform: translateY(0);} }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  h2 { color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { color: var(--accent); }
+  code, pre {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+  }
+  pre { padding: 14px; overflow-x: auto; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 0.85rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+  }
+  th { background: #1c2128; color: #fff; }
+  tr:nth-child(even) { background: #11151a; }
+  td.null-cell { color: var(--muted); font-style: italic; }
+  .badge {
+    display: inline-block;
+    background: #1f6feb33;
+    color: var(--accent);
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    margin-left: 8px;
+  }
+  .playground textarea {
+    width: 100%;
+    min-height: 130px;
+    background: #010409;
+    color: #e6edf3;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: monospace;
+    font-size: 0.95rem;
+    resize: vertical;
+  }
+  .playground button {
+    margin-top: 10px;
+    background: var(--green);
+    color: #04220b;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .playground button:hover { opacity: 0.9; }
+  #result, #challengeResultA, #challengeResultB, #refactorResult { margin-top: 16px; }
+  .error { color: var(--red); font-weight: 600; }
+  .quiz-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    margin: 6px 0;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .quiz-option.correct { background: #1a3b1f; border-color: var(--green); color: #7ee787; }
+  .quiz-option.wrong { background: #3b1a1a; border-color: var(--red); color: #ffa198; }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .4s ease;
+  }
+  textarea.report {
+    width: 100%;
+    min-height: 90px;
+    background: #010409;
+    color: #e6edf3;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    font-family: inherit;
+  }
+  .qnum { color: var(--accent); font-weight: 700; }
+  footer { text-align: center; color: var(--muted); padding: 20px; font-size: 0.85rem; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .table-tabs { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .table-tabs button {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .table-tabs button.active { color: #fff; border-color: var(--accent); background: #1f6feb22; }
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 700px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-box {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .compare-box h4 { margin: 0 0 8px; }
+  .messy { border-left: 3px solid var(--red); }
+  .clean { border-left: 3px solid var(--green); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧩  5 — Subqueries & CTEs</h1>
+  <p>Nested Queries · WITH Clauses (CTEs) · When to Use Each</p>
+</header>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<nav id="tabs">
+  <button data-tab="concepts" class="active">1. Concepts</button>
+  <button data-tab="playground">2. SQL Playground</button>
+  <button data-tab="practice">3. Practice Challenge</button>
+  <button data-tab="quiz">4. Quiz</button>
+  <button data-tab="report">5. Deliverable</button>
+</nav>
+
+<main>
+
+<!-- CONCEPTS -->
+<section id="concepts" class="active">
+  <div class="card">
+    <h2>What Is a Subquery?</h2>
+    <p>A <strong>subquery</strong> (or nested query) is a query written inside another query. It runs first, and its result is used by the outer query — as a filter value, a list, or a derived table.</p>
+    <pre>SELECT name, total_spent
+FROM customer_totals
+WHERE total_spent > (
+  SELECT AVG(total_spent) FROM customer_totals
+);</pre>
+    <p>Here, the inner query <code>(SELECT AVG(total_spent) FROM customer_totals)</code> runs first and returns a single number, which the outer query then compares against.</p>
+  </div>
+
+  <div class="card">
+    <h2>Types of Subqueries</h2>
+    <table>
+      <tr><th>Type</th><th>Returns</th><th>Used with</th></tr>
+      <tr><td>Scalar subquery</td><td>A single value</td><td><code>=</code>, <code>&gt;</code>, <code>&lt;</code>, etc.</td></tr>
+      <tr><td>List subquery</td><td>A list of values</td><td><code>IN</code>, <code>NOT IN</code></td></tr>
+      <tr><td>Derived table (inline view)</td><td>A whole table</td><td><code>FROM (SELECT ...) AS alias</code></td></tr>
+    </table>
+    <pre>-- List subquery example
+SELECT * FROM orders
+WHERE customer_id IN (
+  SELECT customer_id FROM customers WHERE country = 'US'
+);</pre>
+  </div>
+
+  <div class="card">
+    <h2>Common Table Expressions (CTEs) — the WITH Clause</h2>
+    <p>A <strong>CTE</strong> is a named, temporary result set defined with <code>WITH ... AS (...)</code> that you can reference later in the query, just like a table. It makes complex queries far more readable by breaking them into logical steps.</p>
+    <pre>WITH customer_totals AS (
+  SELECT customer_id, SUM(amount) AS total_spent
+  FROM orders
+  GROUP BY customer_id
+)
+SELECT c.name, ct.total_spent
+FROM customer_totals ct
+JOIN customers c ON c.customer_id = ct.customer_id
+WHERE ct.total_spent > (SELECT AVG(total_spent) FROM customer_totals);</pre>
+    <p class="badge">CTEs can also be chained: WITH a AS (...), b AS (...) SELECT ... FROM b</p>
+  </div>
+
+  <div class="card">
+    <h2>Subquery vs CTE: When to Use Each</h2>
+    <table>
+      <tr><th></th><th>Subquery</th><th>CTE (WITH)</th></tr>
+      <tr><td>Readability</td><td>Can get messy when nested deeply</td><td>Named, step-by-step — easier to read</td></tr>
+      <tr><td>Reusability</td><td>Must repeat the same subquery if used twice</td><td>Define once, reference multiple times</td></tr>
+      <tr><td>Best for</td><td>Simple, one-off scalar/list checks</td><td>Multi-step logic, breaking down complex queries</td></tr>
+      <tr><td>Recursion</td><td>Not supported</td><td>Supported (<code>WITH RECURSIVE</code>) in many databases</td></tr>
+    </table>
+    <p class="badge">Rule of thumb: if you'd need to explain your query in steps out loud, use a CTE for each step</p>
+  </div>
+
+  <div class="card">
+    <h3>Same Logic, Two Ways</h3>
+    <div class="compare-grid">
+      <div class="compare-box messy">
+        <h4>❌ Nested Subquery (harder to read)</h4>
+        <pre>SELECT name FROM customers
+WHERE customer_id IN (
+  SELECT customer_id FROM orders
+  GROUP BY customer_id
+  HAVING SUM(amount) > (
+    SELECT AVG(total) FROM (
+      SELECT SUM(amount) AS total
+      FROM orders GROUP BY customer_id
+    ) t
+  )
+);</pre>
+      </div>
+      <div class="compare-box clean">
+        <h4>✅ CTE Version (clear steps)</h4>
+        <pre>WITH customer_totals AS (
+  SELECT customer_id, SUM(amount) AS total_spent
+  FROM orders GROUP BY customer_id
+),
+avg_spend AS (
+  SELECT AVG(total_spent) AS avg_total FROM customer_totals
+)
+SELECT c.name, ct.total_spent
+FROM customer_totals ct
+JOIN customers c ON c.customer_id = ct.customer_id
+CROSS JOIN avg_spend a
+WHERE ct.total_spent > a.avg_total;</pre>
+      </div>
+    </div>
+    <button class="btn-secondary" onclick="goTab('playground')">Try it in the Playground →</button>
+  </div>
+</section>
+
+<!-- PLAYGROUND -->
+<section id="playground">
+  <div class="card">
+    <h2>🧪 SQL Playground</h2>
+    <p>This simulator supports a simplified subset: <code>WITH name AS (...)</code> CTEs (chainable), scalar/list subqueries in <code>WHERE</code>, basic <code>JOIN</code>, <code>GROUP BY</code>/<code>HAVING</code>, <code>ORDER BY</code>, <code>LIMIT</code>.</p>
+
+    <div class="table-tabs" id="tableTabs">
+      <button data-t="customers" class="active">customers</button>
+      <button data-t="orders">orders</button>
+    </div>
+    <table id="sampleTable"></table>
+  </div>
+
+  <div class="card playground">
+    <h3>Your Query</h3>
+    <textarea id="sqlInput">WITH customer_totals AS (
+  SELECT customer_id, SUM(amount) AS total_spent
+  FROM orders
+  GROUP BY customer_id
+)
+SELECT c.name, ct.total_spent
+FROM customer_totals ct
+JOIN customers c ON c.customer_id = ct.customer_id
+WHERE ct.total_spent > (SELECT AVG(total_spent) FROM customer_totals)
+ORDER BY ct.total_spent DESC;</textarea>
+    <br>
+    <button onclick="runQuery()">▶ Run Query</button>
+    <div id="result"></div>
+  </div>
+</section>
+
+<!-- PRACTICE -->
+<section id="practice">
+  <div class="card">
+    <h2>🎯 Practice A: Subquery Version</h2>
+    <p><strong>Task:</strong> Find customers whose total spending is above the average customer spend, using a <strong>subquery</strong> (no CTE).</p>
+    <textarea id="challengeInputA">SELECT c.name, (
+  SELECT SUM(amount) FROM orders o WHERE o.customer_id = c.customer_id
+) AS total_spent
+FROM customers c
+WHERE (
+  SELECT SUM(amount) FROM orders o WHERE o.customer_id = c.customer_id
+) > (
+  SELECT AVG(t.total) FROM (
+    SELECT SUM(amount) AS total FROM orders GROUP BY customer_id
+  ) t
+);</textarea>
+    <br>
+    <button onclick="runChallenge('A')">✅ Run My Query</button>
+    <div id="challengeResultA"></div>
+  </div>
+
+  <div class="card">
+    <h2>🎯 Practice B: Rewrite with a CTE</h2>
+    <p><strong>Task:</strong> Rewrite the same logic above using a <code>WITH</code> clause, so the "total spend per customer" step is computed once and reused.</p>
+    <textarea id="challengeInputB">WITH customer_totals AS (
+  SELECT customer_id, SUM(amount) AS total_spent
+  FROM orders
+  GROUP BY customer_id
+)
+SELECT c.name, ct.total_spent
+FROM customer_totals ct
+JOIN customers c ON c.customer_id = ct.customer_id
+WHERE ct.total_spent > (SELECT AVG(total_spent) FROM customer_totals)
+ORDER BY ct.total_spent DESC;</textarea>
+    <br>
+    <button onclick="runChallenge('B')">✅ Run My Query</button>
+    <div id="challengeResultB"></div>
+    <p class="badge">Both queries should return the same customers — compare the row counts and names between A and B</p>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="card">
+    <h2>📝 Knowledge Check</h2>
+    <div id="quizContainer"></div>
+    <p id="quizScore" style="font-weight:600;"></p>
+  </div>
+</section>
+
+<!-- REPORT / DELIVERABLE -->
+<section id="report">
+  <div class="card">
+    <h2>📄 Deliverable: Refactor a Messy Query</h2>
+    <p>Below is a working but hard-to-read query with deeply nested subqueries. Your task: refactor it into a clean, readable query using one or more <code>WITH</code> CTEs that produces the <strong>same result</strong>.</p>
+
+    <h3>Messy Original Query</h3>
+    <pre class="messy" style="padding:14px;border-left:3px solid var(--red);">SELECT name FROM customers
+WHERE customer_id IN (
+  SELECT customer_id FROM orders
+  WHERE amount > (
+    SELECT AVG(amount) FROM orders
+  )
+  GROUP BY customer_id
+  HAVING COUNT(*) >= 2
+);
+-- "Customers with 2+ orders that were each above the overall average order amount"</pre>
+
+    <h3>Your Refactored CTE Version</h3>
+    <textarea id="refactorInput">WITH ...
+SELECT ...</textarea>
+    <br>
+    <button onclick="runRefactor()">▶ Run Refactored Query</button>
+    <div id="refactorResult"></div>
+
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer;color:var(--accent);">Show a sample clean solution</summary>
+      <pre>WITH avg_order AS (
+  SELECT AVG(amount) AS avg_amount FROM orders
+),
+above_avg_orders AS (
+  SELECT o.customer_id
+  FROM orders o
+  CROSS JOIN avg_order a
+  WHERE o.amount > a.avg_amount
+),
+qualifying_customers AS (
+  SELECT customer_id
+  FROM above_avg_orders
+  GROUP BY customer_id
+  HAVING COUNT(*) >= 2
+)
+SELECT c.name
+FROM customers c
+JOIN qualifying_customers q ON c.customer_id = q.customer_id;</pre>
+    </details>
+
+    <h3 style="margin-top:24px;">Written Explanation</h3>
+    <textarea class="report" id="reportSummary" placeholder="Explain each CTE step in plain English, why the refactor is more readable, and how you verified it matches the original query's output..."></textarea>
+
+    <br><br>
+    <button class="btn-secondary" onclick="downloadReport()">⬇ Export Report as Markdown</button>
+  </div>
+</section>
+
+</main>
+
+<footer> 5 · Subqueries & CTEs · Interactive SQL Course</footer>
+
+<script>
+// ---------- Sample Data ----------
+const customers = [
+  { customer_id: 1, name: "Alice Chen",   country: "US" },
+  { customer_id: 2, name: "Ben Osei",     country: "CA" },
+  { customer_id: 3, name: "Carla Diaz",   country: "MX" },
+  { customer_id: 4, name: "Dev Patel",    country: "US" },
+  { customer_id: 5, name: "Elin Karlsson",country: "SE" },
+  { customer_id: 6, name: "Farid Nasser", country: "US" },
+  { customer_id: 7, name: "Grace Lin",    country: "US" }
+];
+
+const orders = [
+  { order_id: 1, customer_id: 1, amount: 145.50, order_date: "2026-08-10" },
+  { order_id: 2, customer_id: 1, amount: 210.00, order_date: "2026-07-01" },
+  { order_id: 3, customer_id: 2, amount: 89.00,  order_date: "2026-08-05" },
+  { order_id: 4, customer_id: 3, amount: 210.00, order_date: "2026-07-30" },
+  { order_id: 5, customer_id: 3, amount: 55.25,  order_date: "2026-05-15" },
+  { order_id: 6, customer_id: 5, amount: 320.00, order_date: "2026-08-01" },
+  { order_id: 7, customer_id: 5, amount: 275.00, order_date: "2026-06-10" },
+  { order_id: 8, customer_id: 6, amount: 102.10, order_date: "2026-04-25" },
+  { order_id: 9, customer_id: 7, amount: 47.99,  order_date: "2026-08-14" },
+  { order_id:10, customer_id: 2, amount: 260.00, order_date: "2026-08-14" }
+  // customer 4 (Dev Patel) has no orders at all
+];
+
+const baseTables = { customers, orders };
+
+function renderTable(data, targetId) {
+  if (!data.length) { document.getElementById(targetId).innerHTML = ""; return; }
+  const cols = Object.keys(data[0]);
+  let html = "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  data.forEach(r => {
+    html += "<tr>" + cols.map(c => `<td>${r[c]}</td>`).join("") + "</tr>";
+  });
+  document.getElementById(targetId).innerHTML = html;
+}
+renderTable(customers, "sampleTable");
+
+document.querySelectorAll("#tableTabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#tableTabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderTable(baseTables[btn.dataset.t], "sampleTable");
+  });
+});
+
+// ---------- Tabs ----------
+const tabs = document.querySelectorAll("#tabs button");
+const sections = document.querySelectorAll("main section");
+const tabOrder = ["concepts","playground","practice","quiz","report"];
+tabs.forEach(btn => btn.addEventListener("click", () => goTab(btn.dataset.tab)));
+function goTab(name) {
+  tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  sections.forEach(s => s.classList.toggle("active", s.id === name));
+  updateProgress(name);
+}
+function updateProgress(name) {
+  const idx = tabOrder.indexOf(name);
+  document.getElementById("progressFill").style.width = (((idx+1)/tabOrder.length)*100) + "%";
+}
+updateProgress("concepts");
+
+/* =========================================================================
+   MINI SQL ENGINE — supports WITH CTEs (chained), scalar/list subqueries in
+   WHERE, single JOIN, GROUP BY/HAVING, ORDER BY, LIMIT, CROSS JOIN of CTEs.
+   This is a teaching simulator, not a full SQL parser.
+   ========================================================================= */
+
+function cloneRows(rows) { return rows.map(r => Object.assign({}, r)); }
+
+function prefixRow(row, alias) {
+  const out = Object.assign({}, row);
+  for (const k in row) out[`${alias}.${k}`] = row[k];
+  return out;
+}
+
+function evalComparison(a, op, b) {
+  switch(op) {
+    case "=": return a == b;
+    case "!=": case "<>": return a != b;
+    case ">": return a > b;
+    case "<": return a < b;
+    case ">=": return a >= b;
+    case "<=": return a <= b;
+    default: return true;
+  }
+}
+
+function computeAgg(fnName, col, rows) {
+  const vals = rows.map(r => parseFloat(r[col])).filter(v => !isNaN(v));
+  switch(fnName.toUpperCase()) {
+    case "COUNT": return col === "*" ? rows.length : rows.filter(r => r[col] !== undefined && r[col] !== null).length;
+    case "SUM": return vals.reduce((a,b)=>a+b,0);
+    case "AVG": return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+    case "MIN": return vals.length ? Math.min(...vals) : null;
+    case "MAX": return vals.length ? Math.max(...vals) : null;
+    default: return null;
+  }
+}
+
+// Registry of "tables" available at any point: base tables + previously defined CTEs
+let registry = {};
+
+function resetRegistry() { registry = Object.assign({}, baseTables); }
+
+function extractBalanced(str, startIdx) {
+  // str[startIdx] must be '('
+  let depth = 0;
+  for (let i = startIdx; i < str.length; i++) {
+    if (str[i] === "(") depth++;
+    if (str[i] === ")") { depth--; if (depth === 0) return str.substring(startIdx+1, i); }
+  }
+  throw new Error("Unbalanced parentheses");
+}
+
+function parseSelectList(selectStr) {
+  const parts = [];
+  let depth = 0, cur = "";
+  for (const ch of selectStr) {
+    if (ch === "(") depth++;
+    if (ch === ")") depth--;
+    if (ch === "," && depth === 0) { parts.push(cur.trim()); cur = ""; }
+    else cur += ch;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts.map(p => {
+    const aliasMatch = p.match(/^(.*?)\s+AS\s+(\w+)$/i);
+    if (aliasMatch) return { expr: aliasMatch[1].trim(), alias: aliasMatch[2].trim() };
+    return { expr: p.trim(), alias: p.trim().replace(/[^\w.]/g, "_") };
+  });
+}
+
+function evalSelectExpr(exprObj, groupRows) {
+  const { expr } = exprObj;
+  const aggMatch = expr.match(/^(COUNT|SUM|AVG|MIN|MAX)\s*\(\s*(\*|[\w.]+)\s*\)$/i);
+  if (aggMatch) {
+    let val = computeAgg(aggMatch[1], aggMatch[2], groupRows);
+    if (typeof val === "number") val = Math.round(val * 100) / 100;
+    return val;
+  }
+  return groupRows[0] ? groupRows[0][expr] : null;
+}
+
+// Runs a scalar subquery "(SELECT ... )" -> returns a single value
+function runScalarSubquery(sqlInner) {
+  const rows = runSelectStatement(sqlInner.trim());
+  if (!rows.length) return null;
+  const firstRowKeys = Object.keys(rows[0]);
+  return rows[0][firstRowKeys[0]];
+}
+
+// Runs a list subquery -> returns array of first-column values
+function runListSubquery(sqlInner) {
+  const rows = runSelectStatement(sqlInner.trim());
+  if (!rows.length) return [];
+  const firstKey = Object.keys(rows[0])[0];
+  return rows.map(r => r[firstKey]);
+}
+
+function evalSimpleCond(row, tok) {
+  tok = tok.trim();
+  let negate = false;
+  if (/^NOT\s+/i.test(tok)) { negate = true; tok = tok.replace(/^NOT\s+/i, ""); }
+
+  // IS NULL / IS NOT NULL
+  let m = tok.match(/^([\w.]+)\s+IS\s+(NOT\s+)?NULL$/i);
+  if (m) {
+    const val = row[m[1]];
+    const isNull = (val === undefined || val === null);
+    const res = m[2] ? !isNull : isNull;
+    return negate ? !res : res;
+  }
+
+  // IN (subquery) or IN (literal list)
+  m = tok.match(/^([\w.]+)\s+IN\s*\((.*)\)$/is);
+  if (m) {
+    const field = m[1];
+    const inner = m[2].trim();
+    let list;
+    if (/^SELECT/i.test(inner)) list = runListSubquery(inner);
+    else list = inner.split(",").map(v => v.trim().replace(/^'(.*)'$/, "$1"));
+    const res = list.map(String).includes(String(row[field]));
+    return negate ? !res : res;
+  }
+
+  // field op (subquery)
+  m = tok.match(/^([\w.]+)\s*(!=|<>|>=|<=|=|>|<)\s*\((.*)\)$/is);
+  if (m) {
+    const field = m[1], op = m[2], inner = m[3].trim();
+    let rightVal;
+    if (/^SELECT/i.test(inner)) rightVal = runScalarSubquery(inner);
+    else rightVal = inner;
+    const res = evalComparison(row[field], op, rightVal);
+    return negate ? !res : res;
+  }
+
+  // field op field/literal
+  m = tok.match(/^([\w.]+)\s*(!=|<>|>=|<=|=|>|<)\s*(.+)$/);
+  if (m) {
+    let [, field, op, rawVal] = m;
+    rawVal = rawVal.trim().replace(/^'(.*)'$/, "$1");
+    let rightVal;
+    if (row.hasOwnProperty(rawVal)) rightVal = row[rawVal];
+    else if (!isNaN(parseFloat(rawVal)) && !/^\d{4}-\d{2}-\d{2}$/.test(rawVal)) rightVal = parseFloat(rawVal);
+    else rightVal = rawVal;
+    const res = evalComparison(row[field], op, rightVal);
+    return negate ? !res : res;
+  }
+  return true;
+}
+
+function splitTopLevel(str, keywordRegex) {
+  // split on AND/OR at depth 0 (not inside parens)
+  const parts = [];
+  let depth = 0, cur = "";
+  let i = 0;
+  while (i < str.length) {
+    const ch = str[i];
+    if (ch === "(") depth++;
+    if (ch === ")") depth--;
+    const rest = str.slice(i);
+    const kwMatch = depth === 0 && rest.match(/^\s*(AND|OR)\s+/i);
+    if (kwMatch) {
+      parts.push(cur.trim());
+      parts.push(kwMatch[1].toUpperCase());
+      i += kwMatch[0].length;
+      cur = "";
+      continue;
+    }
+    cur += ch;
+    i++;
+  }
+  if (cur.trim()) parts.push(cur.trim());
+  return parts;
+}
+
+function evalCondition(row, condStr) {
+  const tokens = splitTopLevel(condStr);
+  let result = null, currentOp = null;
+  for (const tok of tokens) {
+    if (/^(AND|OR)$/i.test(tok)) { currentOp = tok; continue; }
+    let t = tok.trim();
+    // strip one layer of wrapping parens if the whole token is wrapped
+    if (t.startsWith("(") && t.endsWith(")")) {
+      const inner = extractBalanced(t, 0);
+      if (inner.length === t.length - 2) t = inner;
+    }
+    const val = evalSimpleCond(row, t);
+    if (result === null) result = val;
+    else if (currentOp === "AND") result = result && val;
+    else if (currentOp === "OR") result = result || val;
+  }
+  return result;
+}
+
+function doJoin(leftRows, rightTableName, rightAlias, onCond, joinType) {
+  const rightRows = registry[rightTableName].map(r => prefixRow(r, rightAlias));
+  const result = [];
+  leftRows.forEach(lrow => {
+    let matched = false;
+    rightRows.forEach(rrow => {
+      const merged = Object.assign({}, lrow, rrow);
+      if (evalCondition(merged, onCond)) { result.push(merged); matched = true; }
+    });
+    if (!matched && joinType === "LEFT") {
+      result.push(Object.assign({}, lrow));
+    }
+  });
+  return result;
+}
+
+function runSelectStatement(sql) {
+  sql = sql.trim().replace(/;\s*$/, "");
+  const selectMatch = sql.match(/^SELECT\s+(.*?)\s+FROM\s+(.*)$/is);
+  if (!selectMatch) throw new Error("Could not parse SELECT/FROM");
+  const selectList = parseSelectList(selectMatch[1]);
+  let rest = selectMatch[2];
+
+  const fromMatch = rest.match(/^(\w+)(?:\s+(\w+))?/);
+  if (!fromMatch) throw new Error("Could not parse FROM clause");
+  const fromTable = fromMatch[1];
+  const fromAlias = fromMatch[2] || fromTable;
+  if (!registry[fromTable]) throw new Error(`Unknown table/CTE: ${fromTable}`);
+  let rows = registry[fromTable].map(r => prefixRow(r, fromAlias));
+
+  // JOIN / CROSS JOIN clauses
+  const joinRegex = /(INNER\s+JOIN|LEFT\s+JOIN|JOIN|CROSS\s+JOIN)\s+(\w+)\s+(\w+)(?:\s+ON\s+(.*?))?(?=(INNER\s+JOIN|LEFT\s+JOIN|JOIN|CROSS\s+JOIN|WHERE|GROUP BY|HAVING|ORDER BY|LIMIT|$))/gis;
+  let jm;
+  while ((jm = joinRegex.exec(rest)) !== null) {
+    let joinType = jm[1].toUpperCase().includes("LEFT") ? "LEFT" : (jm[1].toUpperCase().includes("CROSS") ? "CROSS" : "INNER");
+    const joinTable = jm[2], joinAlias = jm[3], onCond = (jm[4] || "").trim();
+    if (!registry[joinTable]) throw new Error(`Unknown table/CTE: ${joinTable}`);
+    if (joinType === "CROSS") {
+      const rightRows = registry[joinTable].map(r => prefixRow(r, joinAlias));
+      const combined = [];
+      rows.forEach(l => rightRows.forEach(r => combined.push(Object.assign({}, l, r))));
+      rows = combined;
+    } else {
+      rows = doJoin(rows, joinTable, joinAlias, onCond, joinType);
+    }
+  }
+
+  const whereMatch = rest.match(/WHERE\s+(.*?)(GROUP BY|HAVING|ORDER BY|LIMIT|$)/is);
+  const groupMatch = rest.match(/GROUP BY\s+(.*?)(HAVING|ORDER BY|LIMIT|$)/is);
+  const havingMatch = rest.match(/HAVING\s+(.*?)(ORDER BY|LIMIT|$)/is);
+  const orderMatch = rest.match(/ORDER BY\s+(.*?)(LIMIT|$)/is);
+  const limitMatch = rest.match(/LIMIT\s+(\d+)/i);
+
+  if (whereMatch && whereMatch[1].trim()) {
+    rows = rows.filter(r => evalCondition(r, whereMatch[1].trim()));
+  }
+
+  const hasAgg = selectList.some(s => /^(COUNT|SUM|AVG|MIN|MAX)\s*\(/i.test(s.expr));
+  let resultRows = [];
+
+  if (groupMatch && groupMatch[1].trim()) {
+    const groupCols = groupMatch[1].split(",").map(c => c.trim());
+    const groups = {};
+    rows.forEach(r => {
+      const key = groupCols.map(c => r[c]).join("||");
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+    resultRows = Object.values(groups).map(groupRows => {
+      const outRow = {};
+      selectList.forEach(sel => { outRow[sel.alias] = evalSelectExpr(sel, groupRows); });
+      return outRow;
+    });
+    if (havingMatch && havingMatch[1].trim()) {
+      resultRows = resultRows.filter(r => evalCondition(r, havingMatch[1].trim()));
+    }
+  } else if (hasAgg) {
+    const outRow = {};
+    selectList.forEach(sel => { outRow[sel.alias] = evalSelectExpr(sel, rows); });
+    resultRows = [outRow];
+  } else {
+    resultRows = rows.map(r => {
+      if (selectList.length === 1 && selectList[0].expr === "*") return r;
+      const outRow = {};
+      selectList.forEach(sel => { outRow[sel.alias] = r[sel.expr]; });
+      return outRow;
+    });
+  }
+
+  if (orderMatch && orderMatch[1].trim()) {
+    const clauses = orderMatch[1].split(",").map(c => c.trim());
+    resultRows.sort((a,b) => {
+      for (const c of clauses) {
+        const [col, dir] = c.split(/\s+/);
+        const d = (dir && dir.toUpperCase() === "DESC") ? -1 : 1;
+        const av = a[col] === null || a[col] === undefined ? "" : a[col];
+        const bv = b[col] === null || b[col] === undefined ? "" : b[col];
+        if (av < bv) return -1*d;
+        if (av > bv) return 1*d;
+      }
+      return 0;
+    });
+  }
+  if (limitMatch) resultRows = resultRows.slice(0, parseInt(limitMatch[1]));
+  return resultRows;
+}
+
+// Parses leading WITH clause(s), populates registry with CTE results, then runs final SELECT
+function runSimulatedQuery(sql) {
+  resetRegistry();
+  sql = sql.trim();
+  if (/^WITH\s/i.test(sql)) {
+    let rest = sql.replace(/^WITH\s+/i, "");
+    // Loop through name AS ( ... ), name2 AS ( ... ), ... SELECT ...
+    while (true) {
+      const nameMatch = rest.match(/^(\w+)\s+AS\s*\(/i);
+      if (!nameMatch) break;
+      const cteName = nameMatch[1];
+      const parenStart = rest.indexOf("(", nameMatch.index);
+      const inner = extractBalanced(rest, parenStart);
+      const cteRows = runSelectStatement(inner);
+      registry[cteName] = cteRows;
+      rest = rest.slice(parenStart + inner.length + 2).trim(); // skip past ")"
+      if (rest.startsWith(",")) { rest = rest.slice(1).trim(); continue; }
+      break;
+    }
+    return runSelectStatement(rest);
+  }
+  return runSelectStatement(sql);
+}
+
+function renderRows(rows, targetId) {
+  if (!rows.length) {
+    document.getElementById(targetId).innerHTML = "<p class='error'>No matching rows.</p>";
+    return;
+  }
+  const cols = Object.keys(rows[0]);
+  let html = "<table><tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  rows.forEach(r => {
+    html += "<tr>" + cols.map(c => {
+      const v = r[c];
+      if (v === null || v === undefined) return `<td class="null-cell">NULL</td>`;
+      return `<td>${v}</td>`;
+    }).join("") + "</tr>";
+  });
+  html += "</table><p>" + rows.length + " row(s) returned</p>";
+  document.getElementById(targetId).innerHTML = html;
+}
+
+function runQuery() {
+  const sql = document.getElementById("sqlInput").value;
+  try {
+    const rows = runSimulatedQuery(sql);
+    renderRows(rows, "result");
+  } catch(e) {
+    document.getElementById("result").innerHTML = `<p class="error">Error parsing query: ${e.message}</p>`;
+  }
+}
+
+function runChallenge(letter) {
+  const sql = document.getElementById("challengeInput" + letter).value;
+  try {
+    const rows = runSimulatedQuery(sql);
+    renderRows(rows, "challengeResult" + letter);
+  } catch(e) {
+    document.getElementById("challengeResult" + letter).innerHTML = `<p class="error">Error: ${e.message}</p>`;
+  }
+}
+
+function runRefactor() {
+  const sql = document.getElementById("refactorInput").value;
+  try {
+    const rows = runSimulatedQuery(sql);
+    renderRows(rows, "refactorResult");
+    const expected = ["Alice Chen", "Elin Karlsson"]; // 2+ orders each above overall avg amount
+    const gotNames = rows.map(r => Object.values(r)[0]).sort().join(",");
+    const expNames = expected.sort().join(",");
+    const feedback = document.createElement("p");
+    feedback.style.fontWeight = "600";
+    if (gotNames === expNames) {
+      feedback.style.color = "#3fb950";
+      feedback.textContent = "✅ Matches expected result: Alice Chen, Elin Karlsson.";
+    } else {
+      feedback.style.color = "#f85149";
+      feedback.textContent = "❌ Doesn't match expected result yet (Alice Chen, Elin Karlsson) — check your CTE steps.";
+    }
+    document.getElementById("refactorResult").appendChild(feedback);
+  } catch(e) {
+    document.getElementById("refactorResult").innerHTML = `<p class="error">Error: ${e.message}</p>`;
+  }
+}
+
+// ---------- Quiz ----------
+const quizData = [
+  {
+    q: "What is a subquery?",
+    options: [
+      "A query that runs after the main query completes and modifies its output",
+      "A query nested inside another query, whose result feeds into the outer query",
+      "A backup copy of a query for version control",
+      "A query that only works with JOIN"
+    ],
+    answer: 1
+  },
+  {
+    q: "What does the WITH clause create?",
+    options: [
+      "A permanent new table in the database",
+      "A named, temporary result set (CTE) usable later in the query",
+      "An index on a column",
+      "A stored procedure"
+    ],
+    answer: 1
+  },
+  {
+    q: "Which is a key advantage of CTEs over deeply nested subqueries?",
+    options: [
+      "CTEs run faster in every database engine, guaranteed",
+      "CTEs break logic into named, readable steps and can be reused in the same query",
+      "CTEs eliminate the need for JOINs entirely",
+      "CTEs automatically create indexes"
+    ],
+    answer: 1
+  },
+  {
+    q: "A subquery that returns a single value (e.g., an average) is called a:",
+    options: ["List subquery", "Correlated subquery", "Scalar subquery", "Derived table"],
+    answer: 2
+  },
+  {
+    q: "Which SQL feature do some databases support with CTEs that isn't possible with plain subqueries?",
+    options: ["Sorting results", "Recursive queries (WITH RECURSIVE)", "Using WHERE clauses", "Using GROUP BY"],
+    answer: 1
+  }
+];
+let score = 0, answered = 0;
+function renderQuiz() {
+  const container = document.getElementById("quizContainer");
+  container.innerHTML = "";
+  quizData.forEach((item, qi) => {
+    const div = document.createElement("div");
+    div.style.marginBottom = "22px";
+    div.innerHTML = `<p><span class="qnum">Q${qi+1}.</span> ${item.q}</p>`;
+    item.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.onclick = () => {
+        if (btn.dataset.locked) return;
+        [...div.querySelectorAll(".quiz-option")].forEach(b => b.dataset.locked = "1");
+        if (oi === item.answer) {
+          btn.classList.add("correct");
+          score++;
+        } else {
+          btn.classList.add("wrong");
+          div.querySelectorAll(".quiz-option")[item.answer].classList.add("correct");
+        }
+        answered++;
+        document.getElementById("quizScore").textContent = `Score: ${score}/${quizData.length} (answered ${answered}/${quizData.length})`;
+      };
+      div.appendChild(btn);
+    });
+    container.appendChild(div);
+  });
+}
+renderQuiz();
+
+// ---------- Report Export ----------
+function downloadReport() {
+  let md = "# 5 Deliverable: Refactoring a Messy Query into a CTE\n\n";
+  md += "## Original Messy Query\n\n```sql\nSELECT name FROM customers\nWHERE customer_id IN (\n  SELECT customer_id FROM orders\n  WHERE amount > (\n    SELECT AVG(amount) FROM orders\n  )\n  GROUP BY customer_id\n  HAVING COUNT(*) >= 2\n);\n```\n\n";
+  md += "## Refactored CTE Query\n\n```sql\n" + document.getElementById("refactorInput").value + "\n```\n\n";
+
+  let rowsMd = "## Results\n\n";
+  try {
+    const rows = runSimulatedQuery(document.getElementById("refactorInput").value);
+    if (rows.length) {
+      const cols = Object.keys(rows[0]);
+      rowsMd += "| " + cols.join(" | ") + " |\n";
+      rowsMd += "|" + cols.map(()=>"---").join("|") + "|\n";
+      rows.forEach(r => {
+        rowsMd += "| " + cols.map(c => (r[c] === null || r[c] === undefined) ? "NULL" : r[c]).join(" | ") + " |\n";
+      });
+    } else {
+      rowsMd += "_(no rows returned)_\n";
+    }
+  } catch(e) {
+    rowsMd += `_(query error: ${e.message})_\n`;
+  }
+  md += rowsMd;
+
+  const summary = document.getElementById("reportSummary").value || "_(no explanation provided)_";
+  md += `\n## Written Explanation\n\n${summary}\n`;
+
+  const blob = new Blob([md], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "week5-subqueries-ctes-report.md";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
