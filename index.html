@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL — The Card Catalog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c2b22;
+    --pine:#1f3d63;
+    --pine-dark:#152a47;
+    --paper:#e8dfc3;
+    --paper-light:#f4eeda;
+    --paper-line:#c9bd98;
+    --brass:#a9812e;
+    --brass-light:#c9a253;
+    --rust:#a13d2c;
+    --ok:#3b6b4a;
+    --shadow: 0 8px 24px rgba(24,42,32,0.25);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, #2c5182 0%, transparent 55%),
+      linear-gradient(180deg, var(--pine) 0%, var(--pine-dark) 100%);
+    background-attachment:fixed;
+    font-family:'Source Serif 4', Georgia, serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding:32px 18px 80px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  .wrap{max-width:920px; margin:0 auto;}
+
+  /* ---------- Header: drawer front ---------- */
+  .drawer-front{
+    background: linear-gradient(180deg, #3f6ba0 0%, #2c5182 100%);
+    border-radius:6px 6px 4px 4px;
+    padding:22px 28px 26px;
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+    position:relative;
+    border:1px solid #142440;
+  }
+  .drawer-front::after{
+    content:"";
+    position:absolute; left:14px; right:14px; bottom:8px; height:1px;
+    background:rgba(0,0,0,0.25);
+  }
+  .pull{
+    width:64px; height:14px;
+    background:linear-gradient(180deg, var(--brass-light), var(--brass) 60%, #7a5d1f);
+    border-radius:7px;
+    margin:0 auto 18px;
+    box-shadow:0 2px 4px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.4);
+  }
+  .label-holder{
+    background:var(--paper-light);
+    border:2px solid var(--brass);
+    border-radius:3px;
+    padding:10px 18px;
+    text-align:center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--rust);
+    font-weight:600;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-optical-sizing:auto;
+    font-weight:700;
+    font-size:clamp(28px,4.5vw,42px);
+    margin:4px 0 2px;
+    color:var(--ink);
+    letter-spacing:-0.01em;
+  }
+  .subhead{
+    font-size:14.5px;
+    color:#4a4030;
+    font-style:italic;
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin:22px 0 0;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  .tab{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    background:#dccfa2;
+    color:#4a4030;
+    border:1px solid #b4a374;
+    border-bottom:none;
+    padding:10px 16px 9px;
+    border-radius:6px 6px 0 0;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:background 0.15s, color 0.15s, transform 0.1s;
+    position:relative;
+    top:1px;
+  }
+  .tab:hover{background:#e8dcb4;}
+  .tab.active{
+    background:var(--paper-light);
+    color:var(--ink);
+    font-weight:600;
+    box-shadow:0 -3px 8px rgba(0,0,0,0.08);
+  }
+  .tab:focus-visible, button:focus-visible, textarea:focus-visible{
+    outline:3px solid var(--brass-light);
+    outline-offset:2px;
+  }
+
+  /* ---------- Card body ---------- */
+  .card{
+    background:var(--paper-light);
+    border:1px solid var(--paper-line);
+    border-radius:0 4px 6px 6px;
+    padding:28px 30px 32px;
+    box-shadow:var(--shadow);
+    background-image: repeating-linear-gradient(180deg, transparent 0 33px, rgba(169,129,46,0.08) 33px 34px);
+  }
+  .panel{display:none;}
+  .panel.active{display:block; animation:fadeIn 0.25s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  h2{
+    font-family:'Fraunces', serif;
+    font-size:23px;
+    font-weight:600;
+    margin:0 0 6px;
+    color:var(--pine-dark);
+  }
+  h3{
+    font-family:'Fraunces', serif;
+    font-size:17px;
+    font-weight:600;
+    margin:26px 0 8px;
+    color:var(--pine-dark);
+  }
+  p{line-height:1.65; font-size:15.5px; margin:10px 0;}
+  .lede{font-size:16.5px; color:#3a3324;}
+  strong{color:var(--pine-dark);}
+  code, .mono{font-family:'IBM Plex Mono', monospace;}
+  .kw{color:var(--rust); font-weight:600;}
+
+  ul.plain{padding-left:20px; margin:10px 0;}
+  ul.plain li{margin:6px 0; line-height:1.55; font-size:15px;}
+
+  /* ---------- Definition index cards ---------- */
+  .index-cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:14px;
+    margin:16px 0 6px;
+  }
+  .idx-card{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:2px;
+    padding:14px 16px;
+    box-shadow:0 3px 8px rgba(0,0,0,0.12);
+    position:relative;
+    transform:rotate(var(--r,0deg));
+  }
+  .idx-card::before{
+    content:"";
+    position:absolute; top:0; left:16px; right:16px; height:6px;
+    background:repeating-linear-gradient(90deg, #d84a3a 0 8px, transparent 8px 16px);
+    opacity:0.55;
+  }
+  .idx-card .term{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:13px;
+    color:var(--rust);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .idx-card .def{font-size:14px; margin-top:6px; line-height:1.5;}
+
+  /* ---------- Schema drawer cards ---------- */
+  .table-cards{display:flex; flex-wrap:wrap; gap:16px; margin:14px 0;}
+  .table-card{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    min-width:210px;
+    flex:1 1 240px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+  }
+  .table-card .head{
+    background:var(--pine);
+    color:var(--paper-light);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    font-weight:600;
+    padding:8px 12px;
+    border-radius:3px 3px 0 0;
+    letter-spacing:0.02em;
+  }
+  .table-card table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .table-card td{padding:5px 10px; border-top:1px dashed #c9bd98;}
+  .table-card td.col-name{font-family:'IBM Plex Mono', monospace; font-weight:600; color:var(--pine-dark);}
+  .table-card td.col-type{color:#7a6f52; text-align:right; font-family:'IBM Plex Mono', monospace; font-size:11.5px;}
+
+  /* ---------- Query console ---------- */
+  .console{
+    background:#141f30;
+    border-radius:6px;
+    padding:14px;
+    margin-top:12px;
+    box-shadow:inset 0 2px 8px rgba(0,0,0,0.5);
+  }
+  textarea{
+    width:100%;
+    min-height:76px;
+    background:#0c1522;
+    color:#e9f3e5;
+    border:1px solid #2a3c56;
+    border-radius:4px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    padding:12px;
+    resize:vertical;
+    line-height:1.5;
+  }
+  .console-row{display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;}
+  button.run{
+    background:linear-gradient(180deg, var(--brass-light), var(--brass));
+    color:#2a1f08;
+    border:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:13px;
+    padding:9px 18px;
+    border-radius:4px;
+    cursor:pointer;
+    letter-spacing:0.03em;
+    box-shadow:0 2px 4px rgba(0,0,0,0.3);
+    transition:transform 0.08s;
+  }
+  button.run:hover{filter:brightness(1.08);}
+  button.run:active{transform:translateY(1px);}
+  button.ghost{
+    background:transparent;
+    border:1px solid #3f5470;
+    color:#c7d3e6;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    padding:8px 14px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  button.ghost:hover{border-color:#88a3c9; color:#fff;}
+  .hint-text{font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:#88a3c9;}
+
+  .results-wrap{margin-top:12px; max-height:260px; overflow:auto; border-radius:4px;}
+  table.results{width:100%; border-collapse:collapse; font-size:13px; background:var(--paper-light);}
+  table.results th{
+    background:var(--pine);
+    color:var(--paper-light);
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    padding:8px 10px;
+    text-align:left;
+    position:sticky; top:0;
+  }
+  table.results td{padding:7px 10px; border-top:1px solid #ddd2ac; font-family:'IBM Plex Mono', monospace; font-size:12.5px;}
+  table.results tr:nth-child(even) td{background:#efe8d1;}
+  .error-box{
+    margin-top:12px;
+    background:#3a1712;
+    border:1px solid var(--rust);
+    color:#f3c9be;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    padding:10px 14px;
+    border-radius:4px;
+  }
+
+  /* ---------- Exercise cards ---------- */
+  .exercise{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    padding:18px 20px 20px;
+    margin:18px 0;
+    box-shadow:0 3px 10px rgba(0,0,0,0.12);
+    position:relative;
+    overflow:hidden;
+  }
+  .exercise .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--rust);
+    letter-spacing:0.1em;
+    font-weight:600;
+  }
+  .exercise .q{font-family:'Fraunces', serif; font-size:16.5px; font-weight:600; margin:4px 0 12px; color:var(--pine-dark);}
+  .stamp{
+    position:absolute; top:14px; right:18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.06em;
+    color:var(--ok);
+    border:2.5px solid var(--ok);
+    border-radius:4px;
+    padding:4px 10px;
+    transform:rotate(8deg) scale(0);
+    opacity:0;
+    transition:transform 0.35s cubic-bezier(.34,1.56,.64,1), opacity 0.2s;
+  }
+  .stamp.show{transform:rotate(8deg) scale(1); opacity:0.9;}
+
+  .progress-track{
+    display:flex; gap:6px; margin:18px 0 6px;
+  }
+  .dot{
+    flex:1; height:6px; border-radius:3px; background:#d8cca0;
+  }
+  .dot.done{background:var(--ok);}
+  .progress-label{font-family:'IBM Plex Mono', monospace; font-size:12px; color:#5a5138; margin-bottom:4px;}
+
+  .banner-done{
+    display:none;
+    margin-top:22px;
+    background:linear-gradient(180deg,#3b6b4a,#2c5138);
+    color:#eef7ec;
+    padding:16px 20px;
+    border-radius:5px;
+    font-family:'Fraunces', serif;
+    font-size:16px;
+    box-shadow:var(--shadow);
+  }
+  .banner-done.show{display:block; animation:fadeIn 0.4s ease;}
+
+  .nav-btns{display:flex; justify-content:space-between; margin-top:26px;}
+  .nav-btns button{
+    background:var(--pine);
+    color:var(--paper-light);
+    border:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    padding:10px 18px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .nav-btns button:hover{background:var(--pine-dark);}
+  .nav-btns button:disabled{opacity:0.35; cursor:default;}
+
+  footer{
+    text-align:center;
+    color:#c9bd98;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    margin-top:26px;
+    letter-spacing:0.04em;
+  }
+
+  .loading-note{
+    color:#7a6f52; font-family:'IBM Plex Mono', monospace; font-size:12.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="drawer-front">
+    <div class="pull"></div>
+    <div class="label-holder">
+      <div class="eyebrow">Module 1 · SQL</div>
+      <h1>The Card Catalog</h1>
+      <div class="subhead">Foundations: tables, rows, columns &amp; your first SELECT queries</div>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <div class="tab active" data-panel="p1" role="tab">01 · Read Me</div>
+    <div class="tab" data-panel="p2" role="tab">02 · The Catalog</div>
+    <div class="tab" data-panel="p3" role="tab">03 · Query Console</div>
+    <div class="tab" data-panel="p4" role="tab">04 · Deliverable</div>
+  </div>
+
+  <div class="card">
+
+    <!-- PANEL 1: INTRO -->
+    <div class="panel active" id="p1">
+      <h2>Before computers, libraries used this.</h2>
+      <p class="lede">A card catalog was a physical database. Every book got an index card: title, author, genre, shelf location. Rows and columns, just made of paper. A <strong>relational database</strong> does the exact same job — it just keeps millions of "cards" in <strong>tables</strong>, and lets you ask questions about them in seconds instead of hours.</p>
+
+      <h3>Four words you need before anything else</h3>
+      <div class="index-cards">
+        <div class="idx-card" style="--r:-1.2deg">
+          <div class="term">Table</div>
+          <div class="def">A drawer of the catalog. One subject, e.g. <span class="mono">books</span>, one drawer.</div>
+        </div>
+        <div class="idx-card" style="--r:0.8deg">
+          <div class="term">Row</div>
+          <div class="def">One index card. A single book, a single borrower, a single event.</div>
+        </div>
+        <div class="idx-card" style="--r:-0.6deg">
+          <div class="term">Column</div>
+          <div class="def">One line on every card, always in the same spot — like "Author:" always written second.</div>
+        </div>
+        <div class="idx-card" style="--r:1deg">
+          <div class="term">Data type</div>
+          <div class="def">What kind of value a column holds — text, a whole number, a date. SQL enforces it so a "year" can't accidentally hold a name.</div>
+        </div>
+      </div>
+
+      <h3>The only sentence you need today</h3>
+      <p>Every query you write in this module has the same shape:</p>
+      <div class="console" style="padding:14px 18px;">
+        <span class="mono" style="color:#e9f3e5; font-size:14.5px;"><span style="color:#e8b04b;">SELECT</span> columns <span style="color:#e8b04b;">FROM</span> table;</span>
+      </div>
+      <p><span class="kw">SELECT</span> says which columns you want to see. <span class="kw">FROM</span> says which drawer to pull them from. That's it — that's the whole sentence. Everything else in SQL is a variation on this.</p>
+
+      <p>Head to <strong>02 · The Catalog</strong> to meet the actual drawers we'll be querying, or jump straight to <strong>03 · Query Console</strong> if you'd rather learn by typing.</p>
+    </div>
+
+    <!-- PANEL 2: SCHEMA -->
+    <div class="panel" id="p2">
+      <h2>Three drawers: the Northwood Public Library</h2>
+      <p class="lede">This is the actual database you'll query — a small library with 12 books, 6 members, and their borrowing history. Every drawer below is a real SQL table sitting in your browser right now.</p>
+
+      <div class="table-cards">
+        <div class="table-card">
+          <div class="head">books</div>
+          <table>
+            <tr><td class="col-name">id</td><td class="col-type">INTEGER</td></tr>
+            <tr><td class="col-name">title</td><td class="col-type">TEXT</td></tr>
+            <tr><td class="col-name">author</td><td class="col-type">TEXT</td></tr>
+            <tr><td class="col-name">genre</td><td class="col-type">TEXT</td></tr>
+            <tr><td class="col-name">year</td><td class="col-type">INTEGER</td></tr>
+            <tr><td class="col-name">available</td><td class="col-type">INTEGER</td></tr>
+          </table>
+        </div>
+        <div class="table-card">
+          <div class="head">borrowers</div>
+          <table>
+            <tr><td class="col-name">id</td><td class="col-type">INTEGER</td></tr>
+            <tr><td class="col-name">name</td><td class="col-type">TEXT</td></tr>
+            <tr><td class="col-name">joined_year</td><td class="col-type">INTEGER</td></tr>
+          </table>
+        </div>
+        <div class="table-card">
+          <div class="head">checkouts</div>
+          <table>
+            <tr><td class="col-name">id</td><td class="col-type">INTEGER</td></tr>
+            <tr><td class="col-name">book_id</td><td class="col-type">INTEGER</td></tr>
+            <tr><td class="col-name">borrower_id</td><td class="col-type">INTEGER</td></tr>
+            <tr><td class="col-name">checkout_date</td><td class="col-type">TEXT</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <p class="loading-note" id="schema-note">Loading live data into the drawers…</p>
+      <div id="schema-preview"></div>
+
+      <p style="margin-top:18px;">Notice <span class="mono">checkouts</span> doesn't repeat the book title or borrower name — just their <span class="mono">id</span> numbers. That's deliberate, and it's the whole reason <strong>joins</strong> exist (that's Module 4). For now, we're only working one drawer at a time.</p>
+    </div>
+
+    <!-- PANEL 3: CONSOLE -->
+    <div class="panel" id="p3">
+      <h2>Query console</h2>
+      <p class="lede">This runs a real SQLite database in your browser. Type a query, press <strong>Run</strong>, see the rows come back. Nothing you do here can break anything — try things.</p>
+
+      <div class="console">
+        <textarea id="sql-input" spellcheck="false">SELECT * FROM books;</textarea>
+        <div class="console-row">
+          <button class="run" id="run-btn">▸ Run query</button>
+          <button class="ghost" id="reset-btn">Reset to sample</button>
+          <span class="hint-text" id="engine-status">loading engine…</span>
+        </div>
+      </div>
+
+      <div id="output"></div>
+
+      <h3>Try these, one at a time</h3>
+      <ul class="plain">
+        <li><span class="mono">SELECT * FROM borrowers;</span> — every column, every row</li>
+        <li><span class="mono">SELECT title, author FROM books;</span> — only the columns you name</li>
+        <li><span class="mono">SELECT DISTINCT genre FROM books;</span> — each unique value once</li>
+        <li><span class="mono">SELECT * FROM books LIMIT 5;</span> — cap how many rows come back</li>
+        <li><span class="mono">SELECT name AS Member FROM borrowers;</span> — rename a column in the output with <span class="kw">AS</span></li>
+      </ul>
+      <p>When you're comfortable, move to <strong>04 · Deliverable</strong> — five real questions, checked automatically as you go.</p>
+    </div>
+
+    <!-- PANEL 4: DELIVERABLE -->
+    <div class="panel" id="p4">
+      <h2>Deliverable: five questions from the head librarian</h2>
+      <p class="lede">Write one query per card. Press <strong>Check</strong> and you'll get a stamp the moment it's correct — there's more than one right way to write most of these, so don't worry about matching exact wording, just get the right rows back.</p>
+
+      <div class="progress-label" id="progress-label">0 of 5 stamped</div>
+      <div class="progress-track" id="progress-track">
+        <div class="dot" data-d="0"></div><div class="dot" data-d="1"></div><div class="dot" data-d="2"></div><div class="dot" data-d="3"></div><div class="dot" data-d="4"></div>
+      </div>
+
+      <div id="exercises"></div>
+
+      <div class="banner-done" id="done-banner">
+        📇 All five stamped. You can read a table, pick columns, dedupe values, cap row counts, and rename output — that's Module 1, done. Module 2 adds <span class="mono">WHERE</span>, <span class="mono">ORDER BY</span>, and real filtering.
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button id="prev-btn">← Back</button>
+      <button id="next-btn">Next →</button>
+    </div>
+  </div>
+
+  <footer>NORTHWOOD PUBLIC LIBRARY · CATALOG SYSTEM · EST. MODULE 1</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Tab / nav wiring ---------------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var panels = Array.prototype.slice.call(document.querySelectorAll(".panel"));
+  var order = ["p1","p2","p3","p4"];
+
+  function activate(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.panel === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    document.getElementById("prev-btn").disabled = order.indexOf(id) === 0;
+    document.getElementById("next-btn").disabled = order.indexOf(id) === order.length - 1;
+    document.querySelector(".card").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ activate(t.dataset.panel); }); });
+  document.getElementById("prev-btn").addEventListener("click", function(){
+    var cur = order.indexOf(document.querySelector(".panel.active").id);
+    if(cur>0) activate(order[cur-1]);
+  });
+  document.getElementById("next-btn").addEventListener("click", function(){
+    var cur = order.indexOf(document.querySelector(".panel.active").id);
+    if(cur<order.length-1) activate(order[cur+1]);
+  });
+
+  /* ---------------- Database setup ---------------- */
+  var db = null;
+  var statusEl = document.getElementById("engine-status");
+
+  var SCHEMA_SQL = [
+    "CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, author TEXT, genre TEXT, year INTEGER, available INTEGER);",
+    "CREATE TABLE borrowers (id INTEGER PRIMARY KEY, name TEXT, joined_year INTEGER);",
+    "CREATE TABLE checkouts (id INTEGER PRIMARY KEY, book_id INTEGER, borrower_id INTEGER, checkout_date TEXT);",
+
+    "INSERT INTO books VALUES (1,'The Hobbit','J.R.R. Tolkien','Fantasy',1937,1);",
+    "INSERT INTO books VALUES (2,'Dune','Frank Herbert','Science Fiction',1965,0);",
+    "INSERT INTO books VALUES (3,'Beloved','Toni Morrison','Literary Fiction',1987,1);",
+    "INSERT INTO books VALUES (4,'A Brief History of Time','Stephen Hawking','Science',1988,1);",
+    "INSERT INTO books VALUES (5,'Pride and Prejudice','Jane Austen','Romance',1813,1);",
+    "INSERT INTO books VALUES (6,'The Left Hand of Darkness','Ursula K. Le Guin','Science Fiction',1969,0);",
+    "INSERT INTO books VALUES (7,'Circe','Madeline Miller','Fantasy',2018,1);",
+    "INSERT INTO books VALUES (8,'Sapiens','Yuval Noah Harari','Nonfiction',2011,1);",
+    "INSERT INTO books VALUES (9,'The Song of Achilles','Madeline Miller','Fantasy',2011,0);",
+    "INSERT INTO books VALUES (10,'Silent Spring','Rachel Carson','Science',1962,1);",
+    "INSERT INTO books VALUES (11,'Jane Eyre','Charlotte Bronte','Romance',1847,1);",
+    "INSERT INTO books VALUES (12,'Klara and the Sun','Kazuo Ishiguro','Literary Fiction',2021,1);",
+
+    "INSERT INTO borrowers VALUES (1,'Amara Okafor',2021);",
+    "INSERT INTO borrowers VALUES (2,'Liam Chen',2019);",
+    "INSERT INTO borrowers VALUES (3,'Priya Nair',2023);",
+    "INSERT INTO borrowers VALUES (4,'Diego Marin',2020);",
+    "INSERT INTO borrowers VALUES (5,'Freya Solberg',2022);",
+    "INSERT INTO borrowers VALUES (6,'Noah Bennett',2018);",
+
+    "INSERT INTO checkouts VALUES (1,2,1,'2026-06-02');",
+    "INSERT INTO checkouts VALUES (2,6,3,'2026-06-05');",
+    "INSERT INTO checkouts VALUES (3,9,2,'2026-06-11');",
+    "INSERT INTO checkouts VALUES (4,1,4,'2026-05-20');",
+    "INSERT INTO checkouts VALUES (5,3,5,'2026-06-14');",
+    "INSERT INTO checkouts VALUES (6,4,6,'2026-05-28');",
+    "INSERT INTO checkouts VALUES (7,7,1,'2026-06-16');",
+    "INSERT INTO checkouts VALUES (8,10,3,'2026-06-01');",
+    "INSERT INTO checkouts VALUES (9,2,5,'2026-06-17');",
+    "INSERT INTO checkouts VALUES (10,9,4,'2026-06-09');"
+  ].join("\n");
+
+  function renderTable(container, columns, values, limit){
+    if(!values || values.length === 0){
+      container.innerHTML = '<p class="loading-note">Query ran, but returned no rows.</p>';
+      return;
+    }
+    var rows = limit ? values.slice(0, limit) : values;
+    var html = '<div class="results-wrap"><table class="results"><thead><tr>';
+    columns.forEach(function(c){ html += '<th>' + c + '</th>'; });
+    html += '</tr></thead><tbody>';
+    rows.forEach(function(r){
+      html += '<tr>';
+      r.forEach(function(v){ html += '<td>' + (v === null ? '<em>NULL</em>' : String(v)) + '</td>'; });
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    if(limit && values.length > limit){
+      html += '<p class="loading-note">Showing ' + limit + ' of ' + values.length + ' rows.</p>';
+    }
+    container.innerHTML = html;
+  }
+
+  function runQuery(sql, outEl){
+    outEl.innerHTML = "";
+    try{
+      var res = db.exec(sql);
+      if(res.length === 0){
+        outEl.innerHTML = '<p class="loading-note">Query ran successfully. (No rows returned — was it a SELECT?)</p>';
+        return {ok:true, columns:[], values:[]};
+      }
+      renderTable(outEl, res[0].columns, res[0].values, 50);
+      return {ok:true, columns:res[0].columns, values:res[0].values};
+    } catch(err){
+      outEl.innerHTML = '<div class="error-box">⚠ ' + err.message + '</div>';
+      return {ok:false, error: err.message};
+    }
+  }
+
+  /* ---------------- Console panel wiring ---------------- */
+  var input = document.getElementById("sql-input");
+  var output = document.getElementById("output");
+  document.getElementById("run-btn").addEventListener("click", function(){
+    if(!db) return;
+    runQuery(input.value, output);
+  });
+  document.getElementById("reset-btn").addEventListener("click", function(){
+    input.value = "SELECT * FROM books;";
+    output.innerHTML = "";
+  });
+
+  /* ---------------- Exercises ---------------- */
+  var exercises = [
+    {
+      q: "\u201CI need to see the entire book catalog, every field.\u201D",
+      hint: "SELECT * FROM books;",
+      check: function(res){
+        return res.columns.length === 6 && res.values.length === 12;
+      }
+    },
+    {
+      q: "\u201CJust give me the title and author of each book \u2014 nothing else.\u201D",
+      hint: "SELECT title, author FROM books;",
+      check: function(res){
+        var cols = res.columns.map(function(c){return c.toLowerCase();});
+        return cols.length === 2 && cols.indexOf("title") > -1 && cols.indexOf("author") > -1 && res.values.length === 12;
+      }
+    },
+    {
+      q: "\u201CWhat genres do we carry? I don't want to see the same genre twice.\u201D",
+      hint: "SELECT DISTINCT genre FROM books;",
+      check: function(res){
+        var vals = res.values.map(function(r){return r[0];});
+        var unique = new Set(vals);
+        return res.columns.length === 1 && vals.length === unique.size && unique.size === 7;
+      }
+    },
+    {
+      q: "\u201CJust show me the first 5 rows of the catalog \u2014 I don't need the whole list right now.\u201D",
+      hint: "SELECT * FROM books LIMIT 5;",
+      check: function(res){
+        return res.values.length === 5 && res.columns.length === 6;
+      }
+    },
+    {
+      q: "\u201CPull the list of members, but head the column \u2018Member\u2019 instead of \u2018name\u2019 in the results.\u201D",
+      hint: "SELECT name AS Member FROM borrowers;",
+      check: function(res){
+        return res.columns.length === 1 && res.columns[0].toLowerCase() === "member" && res.values.length === 6;
+      }
+    }
+  ];
+
+  var exState = [false,false,false,false,false];
+
+  function updateProgress(){
+    var done = exState.filter(Boolean).length;
+    document.getElementById("progress-label").textContent = done + " of 5 stamped";
+    document.querySelectorAll("#progress-track .dot").forEach(function(d,i){
+      d.classList.toggle("done", exState[i]);
+    });
+    document.getElementById("done-banner").classList.toggle("show", done === 5);
+  }
+
+  function buildExercises(){
+    var wrap = document.getElementById("exercises");
+    wrap.innerHTML = "";
+    exercises.forEach(function(ex, i){
+      var div = document.createElement("div");
+      div.className = "exercise";
+      div.innerHTML =
+        '<div class="num">CARD ' + (i+1) + ' OF 5</div>' +
+        '<div class="q">' + ex.q + '</div>' +
+        '<div class="console" style="padding:10px;">' +
+          '<textarea class="ex-input" style="min-height:52px;" spellcheck="false" placeholder="Write your SELECT here…"></textarea>' +
+          '<div class="console-row">' +
+            '<button class="run ex-check">▸ Check</button>' +
+            '<button class="ghost ex-hint">Show hint</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ex-output"></div>' +
+        '<div class="ex-hint-text loading-note" style="display:none; margin-top:8px;"></div>' +
+        '<div class="stamp">✓ CORRECT</div>';
+      wrap.appendChild(div);
+
+      var ta = div.querySelector(".ex-input");
+      var out = div.querySelector(".ex-output");
+      var stamp = div.querySelector(".stamp");
+      var hintText = div.querySelector(".ex-hint-text");
+
+      div.querySelector(".ex-check").addEventListener("click", function(){
+        if(!db) return;
+        var result = runQuery(ta.value, out);
+        if(result.ok && ex.check(result)){
+          exState[i] = true;
+          stamp.classList.add("show");
+          updateProgress();
+        }
+      });
+      div.querySelector(".ex-hint").addEventListener("click", function(){
+        hintText.style.display = "block";
+        hintText.textContent = "Example answer: " + ex.hint;
+      });
+    });
+    updateProgress();
+  }
+
+  /* ---------------- Boot sql.js ---------------- */
+  if(typeof initSqlJs === "undefined"){
+    statusEl.textContent = "engine failed to load";
+  } else {
+    initSqlJs({ locateFile: function(file){ return "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/" + file; } })
+      .then(function(SQL){
+        db = new SQL.Database();
+        db.run(SCHEMA_SQL);
+        statusEl.textContent = "ready — 3 tables loaded";
+        document.getElementById("schema-note").textContent = "Live preview — first 3 rows of each table:";
+        var preview = document.getElementById("schema-preview");
+        ["books","borrowers","checkouts"].forEach(function(t){
+          var res = db.exec("SELECT * FROM " + t + " LIMIT 3;");
+          var box = document.createElement("div");
+          box.style.marginTop = "10px";
+          box.innerHTML = "<div class='hint-text' style='color:#7a6f52; margin-bottom:4px;'>" + t + "</div>";
+          preview.appendChild(box);
+          if(res.length){ renderTable(box, res[0].columns, res[0].values, 3); }
+        });
+        buildExercises();
+      })
+      .catch(function(e){
+        statusEl.textContent = "engine error: " + e.message;
+      });
+  }
+})();
+</script>
+</body>
+</html>
