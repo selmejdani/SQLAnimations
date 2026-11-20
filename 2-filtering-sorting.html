@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2: Filtering & Sorting</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    line-height: 1.6;
+  }
+  header {
+    padding: 40px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #1f6feb22, #16192022);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0; font-size: 2rem; color: #fff; }
+  header p { color: var(--muted); }
+  nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  nav button {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  nav button.active, nav button:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 20px 80px;
+  }
+  section { display: none; animation: fadeIn .3s ease; }
+  section.active { display: block; }
+  @keyframes fadeIn { from {opacity:0; transform: translateY(6px);} to {opacity:1; transform: translateY(0);} }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  h2 { color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { color: var(--accent); }
+  code, pre {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+  }
+  pre { padding: 14px; overflow-x: auto; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 0.9rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+  }
+  th { background: #1c2128; color: #fff; }
+  tr:nth-child(even) { background: #11151a; }
+  .badge {
+    display: inline-block;
+    background: #1f6feb33;
+    color: var(--accent);
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    margin-left: 8px;
+  }
+  .playground textarea {
+    width: 100%;
+    min-height: 100px;
+    background: #010409;
+    color: #e6edf3;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: monospace;
+    font-size: 0.95rem;
+    resize: vertical;
+  }
+  .playground button {
+    margin-top: 10px;
+    background: var(--green);
+    color: #04220b;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .playground button:hover { opacity: 0.9; }
+  #result { margin-top: 16px; }
+  .error { color: var(--red); font-weight: 600; }
+  .quiz-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    margin: 6px 0;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .quiz-option.correct { background: #1a3b1f; border-color: var(--green); color: #7ee787; }
+  .quiz-option.wrong { background: #3b1a1a; border-color: var(--red); color: #ffa198; }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .4s ease;
+  }
+  textarea.report {
+    width: 100%;
+    min-height: 90px;
+    background: #010409;
+    color: #e6edf3;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    font-family: inherit;
+  }
+  .qnum { color: var(--accent); font-weight: 700; }
+  footer { text-align: center; color: var(--muted); padding: 20px; font-size: 0.85rem; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📊 2 — Filtering & Sorting</h1>
+  <p>WHERE · Comparison Operators · AND/OR/NOT · ORDER BY · LIMIT</p>
+</header>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<nav id="tabs">
+  <button data-tab="concepts" class="active">1. Concepts</button>
+  <button data-tab="playground">2. SQL Playground</button>
+  <button data-tab="practice">3. Practice Challenge</button>
+  <button data-tab="quiz">4. Quiz</button>
+  <button data-tab="report">5. Deliverable Report</button>
+</nav>
+
+<main>
+
+<!-- CONCEPTS -->
+<section id="concepts" class="active">
+  <div class="card">
+    <h2>WHERE Clause</h2>
+    <p>Filters rows based on a condition. Only rows where the condition is <code>TRUE</code> are returned.</p>
+    <pre>SELECT * FROM orders
+WHERE amount > 100;</pre>
+  </div>
+
+  <div class="card">
+    <h2>Comparison Operators</h2>
+    <table>
+      <tr><th>Operator</th><th>Meaning</th><th>Example</th></tr>
+      <tr><td><code>=</code></td><td>Equal to</td><td><code>status = 'shipped'</code></td></tr>
+      <tr><td><code>!=</code> / <code>&lt;&gt;</code></td><td>Not equal</td><td><code>status != 'cancelled'</code></td></tr>
+      <tr><td><code>&gt;</code> / <code>&lt;</code></td><td>Greater / less than</td><td><code>amount &gt; 100</code></td></tr>
+      <tr><td><code>&gt;=</code> / <code>&lt;=</code></td><td>Greater/less or equal</td><td><code>qty &gt;= 5</code></td></tr>
+      <tr><td><code>BETWEEN</code></td><td>Range (inclusive)</td><td><code>amount BETWEEN 50 AND 150</code></td></tr>
+      <tr><td><code>IN</code></td><td>Matches list of values</td><td><code>country IN ('US','CA')</code></td></tr>
+      <tr><td><code>LIKE</code></td><td>Pattern match</td><td><code>name LIKE 'A%'</code></td></tr>
+      <tr><td><code>IS NULL</code></td><td>Missing value</td><td><code>shipped_at IS NULL</code></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>AND / OR / NOT</h2>
+    <p>Combine multiple conditions. <strong>AND</strong> requires all conditions true, <strong>OR</strong> requires at least one, <strong>NOT</strong> negates a condition.</p>
+    <pre>SELECT * FROM orders
+WHERE amount > 100
+  AND status = 'completed'
+  AND NOT country = 'FR';</pre>
+    <p class="badge">Tip: use parentheses to control precedence, e.g. <code>WHERE (a OR b) AND c</code></p>
+  </div>
+
+  <div class="card">
+    <h2>ORDER BY</h2>
+    <p>Sorts result rows. Default is ascending (<code>ASC</code>); use <code>DESC</code> for descending. Can sort by multiple columns.</p>
+    <pre>SELECT * FROM orders
+ORDER BY amount DESC, order_date ASC;</pre>
+  </div>
+
+  <div class="card">
+    <h2>LIMIT</h2>
+    <p>Restricts the number of rows returned — useful for "top N" queries. Often paired with <code>ORDER BY</code>.</p>
+    <pre>SELECT * FROM orders
+ORDER BY amount DESC
+LIMIT 10;</pre>
+  </div>
+
+  <div class="card">
+    <h3>Putting it all together</h3>
+    <pre>SELECT customer_name, amount, order_date
+FROM orders
+WHERE amount > 100
+  AND order_date >= DATE('now', '-30 days')
+ORDER BY amount DESC;</pre>
+    <button class="btn-secondary" onclick="goTab('playground')">Try it in the Playground →</button>
+  </div>
+</section>
+
+<!-- PLAYGROUND -->
+<section id="playground">
+  <div class="card">
+    <h2>🧪 SQL Playground (Simulated Orders Table)</h2>
+    <p>Write a query against the sample <code>orders</code> table below. This is a simplified simulator supporting <code>SELECT</code>, <code>WHERE</code>, <code>AND/OR/NOT</code>, comparison operators, <code>ORDER BY</code>, and <code>LIMIT</code>.</p>
+    <table id="sampleTable"></table>
+  </div>
+
+  <div class="card playground">
+    <h3>Your Query</h3>
+    <textarea id="sqlInput">SELECT * FROM orders
+WHERE amount > 100
+  AND order_date >= '2026-07-19'
+ORDER BY amount DESC
+LIMIT 5;</textarea>
+    <br>
+    <button onclick="runQuery()">▶ Run Query</button>
+    <div id="result"></div>
+  </div>
+</section>
+
+<!-- PRACTICE -->
+<section id="practice">
+  <div class="card">
+    <h2>🎯 Practice Challenge</h2>
+    <p><strong>Task:</strong> Find all orders over $100 placed in the last 30 days, sorted by value (highest first).</p>
+    <p>Today's simulated date is <code>2026-08-18</code>, so "last 30 days" means <code>order_date &gt;= '2026-07-19'</code>.</p>
+    <textarea id="challengeInput">-- Write your query here
+SELECT ...
+FROM orders
+WHERE ...
+ORDER BY ...;</textarea>
+    <br>
+    <button onclick="runChallenge()">✅ Check My Query</button>
+    <div id="challengeResult"></div>
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer;color:var(--accent);">Show solution</summary>
+      <pre>SELECT * FROM orders
+WHERE amount > 100
+  AND order_date >= '2026-07-19'
+ORDER BY amount DESC;</pre>
+    </details>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="card">
+    <h2>📝 Knowledge Check</h2>
+    <div id="quizContainer"></div>
+    <p id="quizScore" style="font-weight:600;"></p>
+  </div>
+</section>
+
+<!-- REPORT -->
+<section id="report">
+  <div class="card">
+    <h2>📄 Deliverable: Business Questions Report</h2>
+    <p>Using the <code>orders</code> table and what you learned about filtering & sorting, write SQL queries and short answers for each business question below. Use the Playground to test your queries, then paste your findings here.</p>
+
+    <div id="reportQuestions"></div>
+
+    <button class="btn-secondary" onclick="downloadReport()">⬇ Export Report as Markdown</button>
+  </div>
+</section>
+
+</main>
+
+<footer> 2 · Filtering & Sorting · Interactive SQL Course</footer>
+
+<script>
+// ---------- Sample Data ----------
+const orders = [
+  { id: 1, customer_name: "Alice Chen",  amount: 145.50, status: "completed", country: "US", order_date: "2026-08-10" },
+  { id: 2, customer_name: "Ben Osei",    amount: 89.00,  status: "completed", country: "CA", order_date: "2026-08-05" },
+  { id: 3, customer_name: "Carla Diaz",  amount: 210.00, status: "shipped",   country: "MX", order_date: "2026-07-30" },
+  { id: 4, customer_name: "Dev Patel",   amount: 55.25,  status: "cancelled",country: "US", order_date: "2026-06-15" },
+  { id: 5, customer_name: "Elin Karlsson", amount: 320.00, status: "completed", country: "SE", order_date: "2026-08-01" },
+  { id: 6, customer_name: "Farid Nasser", amount: 102.10, status: "completed", country: "US", order_date: "2026-07-25" },
+  { id: 7, customer_name: "Grace Lin",   amount: 47.99,  status: "shipped",   country: "US", order_date: "2026-08-14" },
+  { id: 8, customer_name: "Hassan Ali",  amount: 175.00, status: "completed", country: "FR", order_date: "2026-08-16" },
+  { id: 9, customer_name: "Ivy Zhao",    amount: 99.99,  status: "completed", country: "CA", order_date: "2026-05-20" },
+  { id:10, customer_name: "Jamal Brooks",amount: 500.00, status: "completed", country: "US", order_date: "2026-08-12" },
+  { id:11, customer_name: "Karin Vos",   amount: 63.40,  status: "cancelled",country: "NL", order_date: "2026-08-02" },
+  { id:12, customer_name: "Liam O'Neil", amount: 130.00, status: "shipped",   country: "US", order_date: "2026-07-20" },
+  { id:13, customer_name: "Mia Torres",  amount: 250.75, status: "completed", country: "MX", order_date: "2026-08-08" },
+  { id:14, customer_name: "Noah Kim",    amount: 78.00,  status: "completed", country: "KR", order_date: "2026-04-01" },
+  { id:15, customer_name: "Omar Farouk", amount: 410.00, status: "completed", country: "FR", order_date: "2026-08-17" }
+];
+
+function renderSampleTable() {
+  const cols = Object.keys(orders[0]);
+  let html = "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  orders.forEach(r => {
+    html += "<tr>" + cols.map(c => `<td>${r[c]}</td>`).join("") + "</tr>";
+  });
+  document.getElementById("sampleTable").innerHTML = html;
+}
+renderSampleTable();
+
+// ---------- Tabs ----------
+const tabs = document.querySelectorAll("#tabs button");
+const sections = document.querySelectorAll("main section");
+const order = ["concepts","playground","practice","quiz","report"];
+tabs.forEach(btn => btn.addEventListener("click", () => goTab(btn.dataset.tab)));
+function goTab(name) {
+  tabs.forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  sections.forEach(s => s.classList.toggle("active", s.id === name));
+  updateProgress(name);
+}
+function updateProgress(name) {
+  const idx = order.indexOf(name);
+  document.getElementById("progressFill").style.width = (((idx+1)/order.length)*100) + "%";
+}
+updateProgress("concepts");
+
+// ---------- Mini Query Engine ----------
+// Supports: SELECT * FROM orders WHERE <cond> ORDER BY col [ASC|DESC][, col2 ...] LIMIT n;
+function evalCondition(row, condStr) {
+  // Split top-level on AND/OR (no nested parens support needed for this simple demo, but handle NOT)
+  // Normalize
+  let expr = condStr.trim();
+  // Replace field references with row values via a safe evaluator
+  // Support: =, !=, <>, >, <, >=, <=, AND, OR, NOT, string/number literals, dates as strings
+  const tokens = expr.split(/\b(AND|OR)\b/i).map(t => t.trim());
+  let result = null;
+  let currentOp = null;
+  for (const tok of tokens) {
+    if (/^(AND|OR)$/i.test(tok)) { currentOp = tok.toUpperCase(); continue; }
+    const val = evalSimple(row, tok);
+    if (result === null) result = val;
+    else if (currentOp === "AND") result = result && val;
+    else if (currentOp === "OR") result = result || val;
+  }
+  return result;
+}
+function evalSimple(row, tok) {
+  let negate = false;
+  tok = tok.trim();
+  if (/^NOT\s+/i.test(tok)) { negate = true; tok = tok.replace(/^NOT\s+/i, ""); }
+  const m = tok.match(/^([a-zA-Z_]+)\s*(!=|<>|>=|<=|=|>|<)\s*(.+)$/);
+  if (!m) return true;
+  let [, field, op, rawVal] = m;
+  rawVal = rawVal.trim().replace(/^'(.*)'$/, "$1");
+  let rowVal = row[field];
+  let cmpVal = rawVal;
+  if (!isNaN(parseFloat(rawVal)) && field !== "order_date") cmpVal = parseFloat(rawVal);
+  let a = rowVal, b = cmpVal;
+  let res;
+  switch(op) {
+    case "=": res = a == b; break;
+    case "!=": case "<>": res = a != b; break;
+    case ">": res = a > b; break;
+    case "<": res = a < b; break;
+    case ">=": res = a >= b; break;
+    case "<=": res = a <= b; break;
+    default: res = true;
+  }
+  return negate ? !res : res;
+}
+
+function runSimulatedQuery(sql) {
+  sql = sql.replace(/;\s*$/, "").trim();
+  const whereMatch = sql.match(/WHERE\s+(.*?)(ORDER BY|LIMIT|$)/is);
+  const orderMatch = sql.match(/ORDER BY\s+(.*?)(LIMIT|$)/is);
+  const limitMatch = sql.match(/LIMIT\s+(\d+)/i);
+
+  let rows = [...orders];
+  if (whereMatch && whereMatch[1].trim()) {
+    rows = rows.filter(r => evalCondition(r, whereMatch[1].trim()));
+  }
+  if (orderMatch && orderMatch[1].trim()) {
+    const clauses = orderMatch[1].split(",").map(c => c.trim());
+    rows.sort((a,b) => {
+      for (const c of clauses) {
+        const [col, dir] = c.split(/\s+/);
+        const d = (dir && dir.toUpperCase() === "DESC") ? -1 : 1;
+        if (a[col] < b[col]) return -1*d;
+        if (a[col] > b[col]) return 1*d;
+      }
+      return 0;
+    });
+  }
+  if (limitMatch) rows = rows.slice(0, parseInt(limitMatch[1]));
+  return rows;
+}
+
+function renderRows(rows, targetId) {
+  if (!rows.length) {
+    document.getElementById(targetId).innerHTML = "<p class='error'>No matching rows.</p>";
+    return;
+  }
+  const cols = Object.keys(rows[0]);
+  let html = "<table><tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  rows.forEach(r => html += "<tr>" + cols.map(c => `<td>${r[c]}</td>`).join("") + "</tr>");
+  html += "</table><p>" + rows.length + " row(s) returned</p>";
+  document.getElementById(targetId).innerHTML = html;
+}
+
+function runQuery() {
+  const sql = document.getElementById("sqlInput").value;
+  try {
+    const rows = runSimulatedQuery(sql);
+    renderRows(rows, "result");
+  } catch(e) {
+    document.getElementById("result").innerHTML = `<p class="error">Error parsing query: ${e.message}</p>`;
+  }
+}
+
+function runChallenge() {
+  const sql = document.getElementById("challengeInput").value;
+  try {
+    const rows = runSimulatedQuery(sql);
+    renderRows(rows, "challengeResult");
+    const expected = orders.filter(r => r.amount > 100 && r.order_date >= "2026-07-19")
+                            .sort((a,b) => b.amount - a.amount);
+    const gotIds = rows.map(r=>r.id).join(",");
+    const expIds = expected.map(r=>r.id).join(",");
+    const feedback = document.createElement("p");
+    feedback.style.fontWeight = "600";
+    if (gotIds === expIds) {
+      feedback.style.color = "#3fb950";
+      feedback.textContent = "✅ Correct! Your query matches the expected result set and order.";
+    } else {
+      feedback.style.color = "#f85149";
+      feedback.textContent = "❌ Not quite — check your WHERE conditions (amount > 100, date >= 2026-07-19) and ORDER BY amount DESC.";
+    }
+    document.getElementById("challengeResult").appendChild(feedback);
+  } catch(e) {
+    document.getElementById("challengeResult").innerHTML = `<p class="error">Error: ${e.message}</p>`;
+  }
+}
+
+// ---------- Quiz ----------
+const quizData = [
+  {
+    q: "Which clause is used to filter rows before grouping?",
+    options: ["ORDER BY", "WHERE", "LIMIT", "SELECT"],
+    answer: 1
+  },
+  {
+    q: "What does `ORDER BY amount DESC` do?",
+    options: [
+      "Sorts rows by amount, smallest first",
+      "Sorts rows by amount, largest first",
+      "Filters rows where amount is descending",
+      "Groups rows by amount"
+    ],
+    answer: 1
+  },
+  {
+    q: "Which operator combines two conditions requiring BOTH to be true?",
+    options: ["OR", "NOT", "AND", "IN"],
+    answer: 2
+  },
+  {
+    q: "What does `LIMIT 5` do?",
+    options: [
+      "Returns only rows where a column equals 5",
+      "Returns at most 5 rows from the result",
+      "Skips the first 5 rows",
+      "Limits the WHERE clause to 5 conditions"
+    ],
+    answer: 1
+  },
+  {
+    q: "Which query correctly finds orders over $100 placed in the last 30 days, sorted by value?",
+    options: [
+      "SELECT * FROM orders ORDER BY amount WHERE amount > 100",
+      "SELECT * FROM orders WHERE amount > 100 AND order_date >= '2026-07-19' ORDER BY amount DESC",
+      "SELECT * FROM orders LIMIT amount > 100",
+      "SELECT * FROM orders WHERE amount > 100 GROUP BY amount"
+    ],
+    answer: 1
+  }
+];
+let score = 0, answered = 0;
+function renderQuiz() {
+  const container = document.getElementById("quizContainer");
+  container.innerHTML = "";
+  quizData.forEach((item, qi) => {
+    const div = document.createElement("div");
+    div.style.marginBottom = "22px";
+    div.innerHTML = `<p><span class="qnum">Q${qi+1}.</span> ${item.q}</p>`;
+    item.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "quiz-option";
+      btn.textContent = opt;
+      btn.onclick = () => {
+        if (btn.dataset.locked) return;
+        [...div.querySelectorAll(".quiz-option")].forEach(b => b.dataset.locked = "1");
+        if (oi === item.answer) {
+          btn.classList.add("correct");
+          score++;
+        } else {
+          btn.classList.add("wrong");
+          div.querySelectorAll(".quiz-option")[item.answer].classList.add("correct");
+        }
+        answered++;
+        document.getElementById("quizScore").textContent = `Score: ${score}/${quizData.length} (answered ${answered}/${quizData.length})`;
+      };
+      div.appendChild(btn);
+    });
+    container.appendChild(div);
+  });
+}
+renderQuiz();
+
+// ---------- Report ----------
+const businessQuestions = [
+  "1. Which orders were over $100 in the last 30 days, and what's the total value they represent?",
+  "2. Who are the top 5 customers by order amount overall?",
+  "3. Which orders are 'completed' AND from the US, sorted by most recent date?",
+  "4. Which orders were cancelled OR came from outside the US — how many are there?",
+  "5. What are the 3 lowest-value completed orders (potential low-margin transactions)?"
+];
+function renderReport() {
+  const container = document.getElementById("reportQuestions");
+  container.innerHTML = "";
+  businessQuestions.forEach((q, i) => {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "20px";
+    wrap.innerHTML = `
+      <p><strong>${q}</strong></p>
+      <textarea class="report" id="report-q${i}" placeholder="Write your SQL query + short answer here..."></textarea>
+    `;
+    container.appendChild(wrap);
+  });
+}
+renderReport();
+
+function downloadReport() {
+  let md = "# 2 Deliverable: Filtering & Sorting Business Report\n\n";
+  businessQuestions.forEach((q, i) => {
+    const val = document.getElementById(`report-q${i}`).value || "_(no answer provided)_";
+    md += `## ${q}\n\n${val}\n\n---\n\n`;
+  });
+  const blob = new Blob([md], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "week2-filtering-sorting-report.md";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
